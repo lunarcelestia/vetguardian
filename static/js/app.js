@@ -40,6 +40,32 @@
     if (petSection) petSection.scrollIntoView({ behavior: "smooth" });
   });
 
+  // ——— Мобильное меню: выдвижная панель справа ———
+  var mobileMenuBtn = document.getElementById("mobileMenuBtn");
+  var mobileNavOverlay = document.getElementById("mobileNavOverlay");
+  var mobileNavClose = document.getElementById("mobileNavClose");
+  function closeMobileNav() {
+    document.body.classList.remove("mobile-nav-open");
+  }
+  function openMobileNav() {
+    document.body.classList.add("mobile-nav-open");
+  }
+  if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openMobileNav);
+  if (mobileNavOverlay) mobileNavOverlay.addEventListener("click", closeMobileNav);
+  if (mobileNavClose) mobileNavClose.addEventListener("click", closeMobileNav);
+  document.querySelectorAll(".mobile-nav-link").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var action = btn.getAttribute("data-action");
+      if (action === "analysis") openAnamnesisModal();
+      else if (action === "clinics") document.getElementById("clinicsSection").scrollIntoView({ behavior: "smooth" });
+      else if (action === "breeds") {
+        var petSection = document.getElementById("petInfoSection");
+        if (petSection) petSection.scrollIntoView({ behavior: "smooth" });
+      } else if (action === "cabinet") showCabinet();
+      closeMobileNav();
+    });
+  });
+
   // ——— Фон при прокрутке ———
   var scrollBgOverlay = document.getElementById("scrollBgOverlay");
   if (scrollBgOverlay) {
@@ -723,7 +749,6 @@
   var articlesByBreedBtn = document.getElementById("articlesByBreedBtn");
   var articlesByAgeBtn = document.getElementById("articlesByAgeBtn");
   var articlesByBehaviorBtn = document.getElementById("articlesByBehaviorBtn");
-  var articlesSection = document.getElementById("articlesSection");
   var articleByBreed = document.getElementById("articleByBreed");
   var articleByAge = document.getElementById("articleByAge");
   var articleByBehavior = document.getElementById("articleByBehavior");
@@ -902,10 +927,14 @@
           var meta = chart.getDatasetMeta(0);
           var dataset = chart.data.datasets[0];
           ctx.save();
-          ctx.fillStyle = "#6b7280"; // мягкий тёмно-серый для подписей
-          ctx.font = "600 16px " + fontFamily;
+          ctx.fillStyle = "#6b7280";
+          var fontFamilyStr = fontFamily;
+          var labelFontSizes = [16, 14, 12, 10, 8];
+          var baseFont = "600 16px " + fontFamilyStr;
+          var minSize = 8;
 
-          function fitLabelText(text, maxWidth) {
+          function fitLabelText(text, maxWidth, fontSize) {
+            ctx.font = "600 " + fontSize + "px " + fontFamilyStr;
             if (!text) return "";
             var measured = ctx.measureText(text).width;
             if (measured <= maxWidth) return text;
@@ -922,23 +951,82 @@
             return result + ellipsis;
           }
 
+          function getLabelFontSize(text, maxWidth) {
+            for (var s = 0; s < labelFontSizes.length; s++) {
+              var size = labelFontSizes[s];
+              ctx.font = "600 " + size + "px " + fontFamilyStr;
+              if (ctx.measureText(text).width <= maxWidth) return size;
+            }
+            return null;
+          }
+
+          function drawBubble(bar, label) {
+            var bubbleFontSize = 11;
+            var padH = 10;
+            var padV = 6;
+            ctx.font = "600 " + bubbleFontSize + "px " + fontFamilyStr;
+            var tw = ctx.measureText(label).width;
+            var bubbleW = tw + padH * 2;
+            var bubbleH = bubbleFontSize + padV * 2;
+            var tailInset = 10;
+            var bubbleLeft = bar.x + tailInset;
+            var bubbleTop = bar.y - bubbleH / 2;
+            var r = bubbleH / 2;
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = "rgba(107, 114, 128, 0.55)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            var left = bubbleLeft;
+            var right = bubbleLeft + bubbleW;
+            var top = bubbleTop;
+            var bottom = bubbleTop + bubbleH;
+            var tipX = bar.x + 3;
+            var tipY = bar.y;
+            ctx.moveTo(left + r, top);
+            ctx.lineTo(right - r, top);
+            ctx.quadraticCurveTo(right, top, right, top + r);
+            ctx.lineTo(right, bottom - r);
+            ctx.quadraticCurveTo(right, bottom, right - r, bottom);
+            ctx.lineTo(left + r, bottom);
+            ctx.quadraticCurveTo(left, bottom, left, bottom - r);
+            ctx.lineTo(left, tipY + 5);
+            ctx.lineTo(tipX, tipY);
+            ctx.lineTo(left, tipY - 5);
+            ctx.lineTo(left, top + r);
+            ctx.quadraticCurveTo(left, top, left + r, top);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "600 " + bubbleFontSize + "px " + fontFamilyStr;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, bubbleLeft + padH, bar.y);
+            ctx.textBaseline = "alphabetic";
+          }
+
           meta.data.forEach(function (bar, index) {
             var label = chart.data.labels[index];
             if (!label) return;
             var value = dataset.data[index];
             var y = bar.y + 6;
-            // справа — процент для этой категории
+            ctx.font = baseFont;
             if (typeof value === "number") {
               ctx.textAlign = "right";
               ctx.fillText(Math.round(value) + "%", bar.x - 8, y);
             }
-            // слева — название категории, обрезанное, если не влезает
             var rightText = (typeof value === "number") ? Math.round(value) + "%" : "";
             var rightWidth = rightText ? ctx.measureText(rightText).width + 16 : 0;
             var maxLabelWidth = Math.max(0, bar.x - rightWidth - (bar.base + 12));
-            var fitted = fitLabelText(label, maxLabelWidth);
-            ctx.textAlign = "left";
-            ctx.fillText(fitted, bar.base + 8, y);
+            var labelSize = getLabelFontSize(label, maxLabelWidth);
+            if (labelSize !== null) {
+              ctx.font = "600 " + labelSize + "px " + fontFamilyStr;
+              var fitted = fitLabelText(label, maxLabelWidth, labelSize);
+              ctx.textAlign = "left";
+              ctx.fillText(fitted, bar.base + 8, y);
+            } else {
+              drawBubble(bar, label);
+            }
           });
           ctx.restore();
         }
@@ -947,16 +1035,11 @@
   }
 
   function setActiveArticle(panelId) {
-    if (!articlesSection) return;
-    articlesSection.style.display = "block";
     [articleByBreed, articleByAge, articleByBehavior].forEach(function (p) {
       if (!p) return;
       p.classList.remove("active");
       if (p.id === panelId) p.classList.add("active");
     });
-
-    // при каждом открытии раздела — перерисовываем графики, чтобы сработала анимация Chart.js
-    // текст и графики показываем только после явного выбора в селекте
   }
 
   // ——— По породе ———
