@@ -127,6 +127,102 @@ body::before {
   gap: 12px;
 }
 
+/* Кнопка-гамбургер (скрыта на десктопе) */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: var(--pastel);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.mobile-menu-btn:hover {
+  background: #bfdbfe;
+}
+.mobile-menu-icon {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+}
+
+/* Оверлей и выдвижная панель (на десктопе скрыты) */
+.mobile-nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(15, 23, 42, 0.4);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.mobile-nav-panel {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 151;
+  width: 280px;
+  max-width: 85vw;
+  background: #f9fdff;
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  padding: 80px 20px 24px;
+}
+.mobile-nav-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--pastel);
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.mobile-nav-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mobile-nav-link {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.mobile-nav-link:hover {
+  background: var(--pastel);
+  color: var(--sky-dark);
+}
+
 .btn-login {
   padding: 10px 20px;
   border-radius: var(--radius-btn);
@@ -508,6 +604,30 @@ body::before {
   margin: 0 auto;
 }
 
+/* Обёртка «карточка + панель»: на десктопе не создаёт свой бокс (children участвуют в общем flex) */
+.pet-info-item {
+  display: contents;
+}
+.pet-info-cards .article-panel {
+  flex: 1 1 100%;
+  margin-top: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  padding: 24px 20px 28px;
+  min-width: 0;
+}
+/* Десктоп: карточки в первую строку, панели — во вторую (одна активная видна). При display:contents дочерние .pet-info-card и .article-panel становятся детьми .pet-info-cards */
+.pet-info-cards > .pet-info-item:nth-child(1) .pet-info-card { order: 1; }
+.pet-info-cards > .pet-info-item:nth-child(1) .article-panel { order: 4; }
+.pet-info-cards > .pet-info-item:nth-child(2) .pet-info-card { order: 2; }
+.pet-info-cards > .pet-info-item:nth-child(2) .article-panel { order: 5; }
+.pet-info-cards > .pet-info-item:nth-child(3) .pet-info-card { order: 3; }
+.pet-info-cards > .pet-info-item:nth-child(3) .article-panel { order: 6; }
+.pet-info-cards .article-panel {
+  margin-top: 2rem;
+}
+
 .pet-info-card {
   border: none;
   background: transparent;
@@ -587,14 +707,7 @@ body::before {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.3);
 }
 
-/* Раздел «Статьи» под карточками «Узнай питомца лучше» */
-.articles-section {
-  margin-top: 2rem;
-  background: rgba(255,255,255,0.9);
-  border-radius: 24px;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
-  padding: 24px 20px 28px;
-}
+/* Раздел «Статьи» — панели теперь внутри .pet-info-cards, стили заданы выше */
 
 .article-panel {
   display: none;
@@ -874,9 +987,25 @@ body::before {
   .header-logo {
     height: 80px;
   }
-  .header-nav .nav-btn {
-    font-size: 14px;
-    padding: 10px 20px;
+  .header-nav {
+    display: none;
+  }
+  .mobile-menu-btn {
+    display: flex;
+  }
+  .mobile-nav-overlay,
+  .mobile-nav-panel {
+    display: block;
+  }
+  body.mobile-nav-open .mobile-nav-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.mobile-nav-open .mobile-nav-panel {
+    transform: translateX(0);
+  }
+  body.mobile-nav-open {
+    overflow: hidden;
   }
   .hero-banner-inner {
     padding: 0 1.5rem;
@@ -908,10 +1037,6 @@ body::before {
   .header-logo {
     height: 64px;
   }
-  .header-nav .nav-btn {
-    font-size: 12px;
-    padding: 8px 14px;
-  }
   .hero {
     padding-top: 120px;
   }
@@ -928,9 +1053,40 @@ body::before {
     width: 100%;
     text-align: center;
   }
+  /* На узких экранах: каждая кнопка и её панель в одной колонке, панель прямо под кнопкой */
+  .pet-info-item {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-width: 0;
+    align-items: center;
+  }
+  .pet-info-cards {
+    flex-wrap: nowrap;
+    gap: 8px 12px;
+    justify-content: center;
+    max-width: 100%;
+    padding: 0 8px;
+  }
+  .pet-info-cards .article-panel {
+    margin-top: 0.5rem;
+    padding: 16px 12px 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .pet-info-card {
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: none;
+  }
   .pet-info-card img {
-    width: 220px;
-    height: 220px;
+    width: 72px;
+    height: 72px;
+  }
+  .pet-info-card-label {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    margin-top: 4px;
   }
   .selector-select {
     font-size: 0.9rem;
