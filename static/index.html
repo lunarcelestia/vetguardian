@@ -25,8 +25,22 @@
         <img src="https://s.fotora.ru/fe35920ab59db595.png" alt="Личный кабинет">
       </button>
     </nav>
+    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Меню">
+      <span class="mobile-menu-icon"></span>
+    </button>
     <div class="header-right"></div>
   </header>
+  <!-- Выдвижная панель навигации (только для телефонов) -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+  <div class="mobile-nav-panel" id="mobileNavPanel">
+    <button type="button" class="mobile-nav-close" id="mobileNavClose" aria-label="Закрыть">×</button>
+    <nav class="mobile-nav-inner">
+      <button type="button" class="mobile-nav-link" data-action="analysis">Обследование</button>
+      <button type="button" class="mobile-nav-link" data-action="clinics">Ветклиники</button>
+      <button type="button" class="mobile-nav-link" data-action="breeds">Узнать питомца лучше</button>
+      <button type="button" class="mobile-nav-link" data-action="cabinet">Личный кабинет</button>
+    </nav>
+  </div>
 
   <main class="main-content" id="mainContent">
     <!-- Hero -->
@@ -46,25 +60,13 @@
     <!-- Узнай питомца лучше -->
     <section class="pet-info-section" id="petInfoSection">
       <h2 class="pet-info-title">УЗНАЙ ПИТОМЦА ЛУЧШЕ</h2>
-      <div class="pet-info-cards">
-        <button type="button" class="pet-info-card" id="articlesByBreedBtn">
-          <img src="https://s.fotora.ru/2fd57e268dcaec52.jpeg" alt="По породе">
-          <span class="pet-info-card-label">По породе</span>
-        </button>
-        <button type="button" class="pet-info-card" id="articlesByAgeBtn">
-          <img src="https://s.fotora.ru/4d4dd18b38d0d4f8.jpeg" alt="По возрасту">
-          <span class="pet-info-card-label">По возрасту</span>
-        </button>
-        <button type="button" class="pet-info-card" id="articlesByBehaviorBtn">
-          <img src="https://s.fotora.ru/5be5875972b9b435.jpeg" alt="По поведению">
-          <span class="pet-info-card-label">По поведению</span>
-        </button>
-      </div>
-
-      <!-- Раскрывающееся поле со статьями и графиками -->
-      <div class="articles-section" id="articlesSection">
-        <!-- По породе -->
-        <div class="article-panel" id="articleByBreed">
+      <div class="pet-info-cards" id="petInfoCards">
+        <div class="pet-info-item">
+          <button type="button" class="pet-info-card" id="articlesByBreedBtn">
+            <img src="https://s.fotora.ru/2fd57e268dcaec52.jpeg" alt="По породе">
+            <span class="pet-info-card-label">По породе</span>
+          </button>
+          <div class="article-panel" id="articleByBreed">
           <div class="article-layout">
             <div class="article-left">
               <div class="selector-wrap selector-wrap-breed">
@@ -92,8 +94,12 @@
             </div>
           </div>
         </div>
-
-        <!-- По возрасту -->
+        </div>
+        <div class="pet-info-item">
+          <button type="button" class="pet-info-card" id="articlesByAgeBtn">
+          <img src="https://s.fotora.ru/4d4dd18b38d0d4f8.jpeg" alt="По возрасту">
+          <span class="pet-info-card-label">По возрасту</span>
+        </button>
         <div class="article-panel" id="articleByAge">
           <div class="article-layout">
             <div class="article-left">
@@ -120,8 +126,12 @@
             </div>
           </div>
         </div>
-
-        <!-- По поведению -->
+        </div>
+        <div class="pet-info-item">
+          <button type="button" class="pet-info-card" id="articlesByBehaviorBtn">
+          <img src="https://s.fotora.ru/5be5875972b9b435.jpeg" alt="По поведению">
+          <span class="pet-info-card-label">По поведению</span>
+        </button>
         <div class="article-panel" id="articleByBehavior">
           <div class="article-layout">
             <div class="article-left">
@@ -143,6 +153,7 @@
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </section>
