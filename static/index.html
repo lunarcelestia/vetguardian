@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
+  <link rel="stylesheet" href="/css/style.css?v=3">
+  <link rel="stylesheet" href="/css/design.css?v=3">
+    <!-- Chart.js для интерактивных графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+<body>
+  <div class="scroll-bg-overlay" id="scrollBgOverlay"></div>
+
+  <!-- Шапка -->
+  <header class="header">
+    <a href="/" class="header-logo-link">
+      <img src="https://s.fotora.ru/d95ad514bb7c3b9f.png" alt="VetGuardian" class="header-logo">
+    </a>
+    <nav class="header-nav">
+      <button type="button" class="nav-btn" id="navAnalysis">Обследование</button>
+      <button type="button" class="nav-btn" id="navClinics">Ветклиники</button>
+      <button type="button" class="nav-btn" id="navBreeds">О собаках</button>
+      <button type="button" class="nav-btn nav-cabinet" id="navCabinet" aria-label="Личный кабинет">
+        <img src="https://s.fotora.ru/fe35920ab59db595.png" alt="Личный кабинет">
+      </button>
+    </nav>
+    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Меню">
+      <span class="mobile-menu-icon"></span>
+    </button>
+    <div class="header-right"></div>
+  </header>
+  <!-- Выдвижная панель навигации (только для телефонов) -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+  <div class="mobile-nav-panel" id="mobileNavPanel">
+    <button type="button" class="mobile-nav-close" id="mobileNavClose" aria-label="Закрыть">×</button>
+    <nav class="mobile-nav-inner">
+      <button type="button" class="mobile-nav-link" data-action="analysis">Обследование</button>
+      <button type="button" class="mobile-nav-link" data-action="clinics">Ветклиники</button>
+      <button type="button" class="mobile-nav-link" data-action="breeds">Узнать питомца лучше</button>
+      <button type="button" class="mobile-nav-link" data-action="cabinet">Личный кабинет</button>
+    </nav>
+  </div>
+
+  <main class="main-content" id="mainContent">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-banner">
+        <img class="hero-banner-img" src="https://s.fotora.ru/08829829b1f5494e.png" alt="VetGuardian баннер">
+        <div class="hero-banner-inner">
+          <h1 class="hero-banner-title">VETGUARDIAN</h1>
+          <p class="hero-banner-subtitle">Ваш персональный AI-ассистент ветеринарной помощи</p>
+          <div class="hero-actions">
+            <button type="button" class="btn-start" id="anamnesisTrigger">Начать анализ</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Узнай питомца лучше -->
+    <section class="pet-info-section" id="petInfoSection">
+      <h2 class="pet-info-title">О СОБАКАХ</h2>
+      <div class="pet-info-cards" id="petInfoCards">
+        <button type="button" class="pet-info-card" id="articlesByBreedBtn">
+          <img src="https://s.fotora.ru/2fd57e268dcaec52.jpeg" alt="По породе">
+          <span class="pet-info-card-label">По породе</span>
+        </button>
+        <button type="button" class="pet-info-card" id="articlesByAgeBtn">
+          <img src="https://s.fotora.ru/4d4dd18b38d0d4f8.jpeg" alt="По возрасту">
+          <span class="pet-info-card-label">По возрасту</span>
+        </button>
+        <button type="button" class="pet-info-card" id="articlesByBehaviorBtn">
+          <img src="https://s.fotora.ru/5be5875972b9b435.jpeg" alt="По поведению">
+          <span class="pet-info-card-label">По поведению</span>
+        </button>
+      </div>
+
+      <div class="pet-info-panels">
+        <div class="article-panel" id="articleByBreed">
+          <div class="breed-list-view" id="breedListView">
+            <!-- Сюда JS подставит карточки пород -->
+          </div>
+          <div class="breed-article-view" id="breedArticleView">
+            <div class="breed-breadcrumb">
+              <button type="button" class="link-button" id="breedBackToList">Статьи по породе</button>
+              <span class="breadcrumb-separator">/</span>
+              <span class="breadcrumb-current" id="breedCurrentName">Порода</span>
+            </div>
+            <div class="breed-article-hero">
+              <div class="breed-article-meta">
+                <h3 class="breed-article-title" id="breedArticleTitle">Название породы</h3>
+                <p class="breed-article-submeta" id="breedArticleSubmeta"></p>
+              </div>
+              <div class="breed-article-image-wrap">
+                <img src="" alt="" class="breed-article-image" id="breedArticleMainImage">
+              </div>
+            </div>
+            <div class="breed-article-tabs">
+              <button type="button" class="breed-tab active" data-tab="overview">Описание</button>
+              <button type="button" class="breed-tab" data-tab="health">Забота о здоровье</button>
+              <button type="button" class="breed-tab" data-tab="problems">Особенности</button>
+            </div>
+            <div class="breed-article-sections">
+              <section class="breed-section active" id="breedSectionOverview">
+                <h4>Описание</h4>
+                <div class="breed-section-body" id="breedOverviewText"></div>
+              </section>
+              <section class="breed-section" id="breedSectionHealth">
+                <h4>Забота о здоровье</h4>
+                <div class="breed-health-layout">
+                  <div class="breed-health-text" id="breedHealthText"></div>
+                  <div class="breed-health-chart">
+                    <div class="chart-block chart-animated show">
+                      <h4 id="breedHealthChartTitle">Частота заболеваний</h4>
+                      <canvas id="breedHealthChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+                <div class="chart-sources">
+                  <span class="chart-sources-label">Источники:</span>
+                  <div class="chart-sources-list" id="breedChartSourceText"></div>
+                  <p class="chart-note" id="breedChartNote"><em>Важно! Проценты не дают в сумме 100%, поскольку отражают долю обращений по каждой системе органов от общего числа страховых случаев, а не распределение заболеваний у конкретной собаки. Одно животное может иметь проблемы с несколькими системами органов одновременно.</em></p>
+                </div>
+              </section>
+              <section class="breed-section" id="breedSectionProblems">
+                <h4>Особенности</h4>
+                <div class="breed-section-body" id="breedProblemsText"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div class="article-panel" id="articleByAge">
+          <div class="age-list-view" id="ageListView">
+            <!-- сюда JS подставит карточки возрастов -->
+          </div>
+          <div class="age-article-view" id="ageArticleView">
+            <div class="age-breadcrumb">
+              <button type="button" class="link-button" id="ageBackToList">Группы по возрасту</button>
+              <span class="breadcrumb-separator">/</span>
+              <span class="breadcrumb-current" id="ageCurrentName">Возраст</span>
+            </div>
+            <div class="age-article-hero">
+              <div class="age-article-meta">
+                <h3 class="age-article-title" id="ageArticleTitle">Возрастная группа</h3>
+                <p class="age-article-submeta" id="ageArticleSubmeta"></p>
+              </div>
+              <div class="age-article-image-wrap">
+                <img src="" alt="" class="age-article-image" id="ageArticleMainImage">
+              </div>
+            </div>
+            <div class="age-article-tabs">
+              <button type="button" class="age-tab active" data-age-tab="overview">Описание</button>
+              <button type="button" class="age-tab" data-age-tab="health">Забота о здоровье</button>
+              <button type="button" class="age-tab" data-age-tab="problems">Частые проблемы</button>
+            </div>
+            <div class="age-article-sections">
+              <section class="age-section active" id="ageSectionOverview">
+                <h4>Описание</h4>
+                <div class="age-section-body" id="ageOverviewText"></div>
+              </section>
+              <section class="age-section" id="ageSectionHealth">
+                <h4>Забота о здоровье</h4>
+                <div class="age-health-text" id="ageHealthText"></div>
+              </section>
+              <section class="age-section" id="ageSectionProblems">
+                <h4>Частые проблемы</h4>
+                <div class="age-problems-layout">
+                  <div class="age-section-body" id="ageProblemsText"></div>
+                  <div class="age-problems-chart">
+                    <div class="chart-block chart-animated show">
+                      <h4 id="ageHealthChartTitle">Частота заболеваний</h4>
+                      <canvas id="ageHealthChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+                <div class="chart-sources">
+                  <span class="chart-sources-label">Источники:</span>
+                  <div class="chart-sources-list" id="ageChartSourceText"></div>
+                  <p class="chart-note" id="ageChartNote"><em>Важно! Данные по возрастным группам основаны на анализе страховых обращений PetSure (2016-2024) и отражают структуру заболеваемости в популяции застрахованных собак Австралии. Проценты не суммируются до 100%, так как показывают распространенность каждого заболевания отдельно (количество случаев на 100 собак), а не доли одной группы. Одно животное может иметь несколько заболеваний одновременно, поэтому проценты перекрываются.</em></p>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div class="article-panel" id="articleByBehavior">
+          <div class="behavior-list-view" id="behaviorListView">
+            <div class="behavior-carousel-wrap">
+              <button type="button" class="behavior-scroll-arrow behavior-scroll-prev" id="behaviorScrollPrev" aria-label="Прокрутить влево">&lt;</button>
+              <div class="behavior-carousel-viewport">
+                <div class="behavior-carousel-track" id="behaviorCarouselTrack">
+                  <!-- сюда JS подставит карточки проблем поведения -->
+                </div>
+              </div>
+              <button type="button" class="behavior-scroll-arrow behavior-scroll-next" id="behaviorScrollNext" aria-label="Прокрутить вправо">&gt;</button>
+            </div>
+            <div class="article-charts">
+              <div class="chart-block chart-animated show">
+                <h4 id="behaviorFrequencyTitle">Частота встречаемости поведенческих проблем</h4>
+                <canvas id="behaviorFrequencyChart"></canvas>
+              </div>
+              <div class="chart-sources chart-sources-behavior">
+                <span class="chart-sources-label">Источники:</span>
+                <div class="chart-sources-list" id="behaviorChartSourceText"></div>
+                <p class="behavior-chart-note"><em>Важно! Представленные проценты не суммируются до 100%, так как они отражают распространенность каждой поведенческой проблемы в популяции (процент собак, у которых данная проблема была зафиксирована). Одна и та же собака может иметь несколько поведенческих нарушений одновременно (например, агрессию на фоне страха и тревогу разлуки), поэтому проценты перекрываются. Исследование показало, что 99.12% собак имеют хотя бы одну поведенческую проблему умеренной или серьезной степени.</em></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="behavior-article-view" id="behaviorArticleView">
+            <div class="behavior-breadcrumb">
+              <button type="button" class="link-button" id="behaviorBackToList">Группы по поведению</button>
+              <span class="breadcrumb-separator">/</span>
+              <span class="breadcrumb-current" id="behaviorCurrentName">Проблема</span>
+            </div>
+            <div class="behavior-article-hero">
+              <h3 class="behavior-article-title" id="behaviorArticleTitle">Проблема поведения</h3>
+              <div class="behavior-article-image-wrap">
+                <img src="" alt="" class="behavior-article-image" id="behaviorArticleMainImage">
+              </div>
+            </div>
+            <div class="behavior-article-sections" id="behaviorArticleText"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Секция ветклиник -->
+    <section class="clinics-section" id="clinicsSection">
+      <h2>ВЕТЕРИНАРНЫЕ КЛИНИКИ В ТВОЕМ ГОРОДЕ</h2>
+      <div class="clinics-layout">
+        <div id="yandexMap" class="yandex-map-container"></div>
+        <div class="city-select-wrap">
+          <label>Выбрать мой город</label>
+          <select id="citySelect">
+            <option value="">— Выберите город —</option>
+            <option value="moscow">Москва</option>
+            <option value="spb">Санкт-Петербург</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- История обращений -->
+    <section class="history-section">
+      <h3>История</h3>
+      <div class="history-strip" id="historyStrip">
+        <span class="history-empty" id="historyEmpty">Пока обращений нет. Пройдите опрос «Начать анамнез».</span>
+      </div>
+    </section>
+
+    <!-- Модальное окно опросника -->
+    <div class="anamnesis-overlay" id="anamnesisOverlay">
+      <div class="anamnesis-panel">
+        <button type="button" class="anamnesis-close-btn" id="anamnesisCloseBtn" aria-label="Закрыть опросник">×</button>
+        <h2 class="stage-title" id="stageTitle">Опросник</h2>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+        <div class="panel-body">
+          <!-- Шаг 1: Опросник -->
+          <div class="questionnaire-step" id="stepQuestionnaire">
+            <form id="questionnaireForm">
+        <div class="block block-step active" data-step="1">
+          <h2>БЛОК 1: ИНФОРМАЦИЯ О ПИТОМЦЕ</h2>
+          <p class="form-group" style="font-weight:normal;">Этот блок нужен, чтобы AI учитывал индивидуальные особенности.</p>
+          <div class="form-group">
+            <span class="label">1. Порода</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b1_breed" value="Чистопородная"> Чистопородная</label>
+              <label><input type="radio" name="b1_breed" value="Беспородная / Метис"> Беспородная / Метис</label>
+            </div>
+            <div class="form-group conditional-input" data-for="b1_breed" data-show-on="Чистопородная">
+              <input type="text" name="b1_breed_name" placeholder="Укажите породу" style="margin-top:8px; max-width:280px;">
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">2. Возраст</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b1_age" value="Щенок/котенок (до 1 года)"> Щенок/котенок (до 1 года)</label>
+              <label><input type="radio" name="b1_age" value="Молодой (1-3 года)"> Молодой (1-3 года)</label>
+              <label><input type="radio" name="b1_age" value="Взрослый (3-7 лет)"> Взрослый (3-7 лет)</label>
+              <label><input type="radio" name="b1_age" value="Пожилой (7-10 лет)"> Пожилой (7-10 лет)</label>
+              <label><input type="radio" name="b1_age" value="Старческий (10+ лет)"> Старческий (10+ лет)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">3. Пол и статус</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b1_sex" value="Мальчик (не кастрирован)"> Мальчик (не кастрирован)</label>
+              <label><input type="radio" name="b1_sex" value="Мальчик (кастрирован)"> Мальчик (кастрирован)</label>
+              <label><input type="radio" name="b1_sex" value="Девочка (не стерилизована)"> Девочка (не стерилизована)</label>
+              <label><input type="radio" name="b1_sex" value="Девочка (стерилизована)"> Девочка (стерилизована)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">4. Вес (приблизительно)</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b1_weight" value="Мелкий (до 10 кг)"> Мелкий (до 10 кг)</label>
+              <label><input type="radio" name="b1_weight" value="Средний (10-25 кг)"> Средний (10-25 кг)</label>
+              <label><input type="radio" name="b1_weight" value="Крупный (25-45 кг)"> Крупный (25-45 кг)</label>
+              <label><input type="radio" name="b1_weight" value="Очень крупный (45+ кг)"> Очень крупный (45+ кг)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">5. Хронические заболевания</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b1_chronic" value="Нет"> Нет</label>
+              <label><input type="radio" name="b1_chronic" value="Аллергия"> Аллергия</label>
+              <label><input type="radio" name="b1_chronic" value="Сахарный диабет"> Сахарный диабет</label>
+              <label><input type="radio" name="b1_chronic" value="Болезни сердца"> Болезни сердца</label>
+              <label><input type="radio" name="b1_chronic" value="Болезни почек"> Болезни почек</label>
+              <label><input type="radio" name="b1_chronic" value="Болезни печени"> Болезни печени</label>
+              <label><input type="radio" name="b1_chronic" value="Эпилепсия"> Эпилепсия</label>
+              <label><input type="radio" name="b1_chronic" value="Другое"> Другое</label>
+            </div>
+            <div class="form-group conditional-input" data-for="b1_chronic" data-show-on="Другое">
+              <input type="text" name="b1_chronic_other" placeholder="Другое (какие)" style="margin-top:8px; max-width:280px;">
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">6. Регулярно принимаемые лекарства</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b1_meds" value="Нет"> Нет</label>
+              <label><input type="radio" name="b1_meds" value="Да"> Да</label>
+            </div>
+            <div class="form-group conditional-input" data-for="b1_meds" data-show-on="Да">
+              <input type="text" name="b1_meds_which" placeholder="Какие" style="margin-top:8px; max-width:280px;">
+            </div>
+          </div>
+        </div>
+
+        <div class="block block-step" data-step="2">
+          <h2>БЛОК 2: ОБРАЗ ЖИЗНИ И ФАКТОРЫ РИСКА</h2>
+          <p class="form-group" style="font-weight:normal;">Эти вопросы помогают оценить риски паразитов и травм.</p>
+          <div class="form-group">
+            <span class="label">7. Где живет питомец?</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b2_living" value="Квартира (без свободного выгула)"> Квартира</label>
+              <label><input type="radio" name="b2_living" value="Частный дом (с доступом на участок)"> Частный дом</label>
+              <label><input type="radio" name="b2_living" value="Вольер на улице"> Вольер на улице</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">8. Как часто и где гуляет?</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b2_walk" value="На поводке, но бывает в парках/лесу"> Парки/леса</label>
+              <label><input type="radio" name="b2_walk" value="Свободный выгул (без поводка)"> Свободный выгул</label>
+              <label><input type="radio" name="b2_walk" value="Не гуляет (лоток/пеленка)"> Не гуляет (лоток/пеленка)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">9. Контакт с другими животными</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b2_contact" value="Нет, живет один/одна"> Нет, живет один/одна</label>
+              <label><input type="radio" name="b2_contact" value="Есть другие питомцы в доме"> Есть другие питомцы в доме</label>
+              <label><input type="radio" name="b2_contact" value="Часто контактирует с чужими животными на улице"> Часто контактирует с чужими животными на улице</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">10. Сезонные обработки</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b2_seasonal" value="Регулярно обрабатываю от блох/клещей"> Регулярно</label>
+              <label><input type="radio" name="b2_seasonal" value="Обрабатываю, но нерегулярно"> Нерегулярно</label>
+              <label><input type="radio" name="b2_seasonal" value="Не обрабатываю"> Не обрабатываю</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">11. Особенности поведения</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b2_behavior" value="Любит подбирать с земли"> Подбирает с земли</label>
+              <label><input type="radio" name="b2_behavior" value="Охотится на мышей/птиц"> Охотится</label>
+              <label><input type="radio" name="b2_behavior" value="Ест траву на улице"> Ест траву</label>
+              <label><input type="radio" name="b2_behavior" value="Интересуется улитками/слизнями"> Улитки/слизни</label>
+              <label><input type="radio" name="b2_behavior" value="Ничего особенного"> Ничего особенного</label>
+              <label><input type="radio" name="b2_behavior" value="Другое"> Другое (указать)</label>
+            </div>
+            <div class="form-group conditional-input" data-for="b2_behavior" data-show-on="Другое">
+              <input type="text" name="b2_behavior_other" placeholder="Другое" style="margin-top:8px; max-width:280px;">
+            </div>
+          </div>
+        </div>
+
+        <div class="block block-step" data-step="3">
+          <h2>БЛОК 3: ТЕКУЩИЕ СИМПТОМЫ</h2>
+          <p class="form-group" style="font-weight:normal;">Этот блок построен на основе ветеринарного чек-листа.</p>
+          <p class="form-group">Оценка: Нет=0, Слабо=1, Умеренно=2, Сильно=3 (или 1-2 раза / 3-5 раз / 6+ раз где указано)</p>
+          <table class="symptom-table">
+            <tr><th>Симптом</th><th>Нет (0)</th><th>Слабо (1)</th><th>Умеренно (2)</th><th>Сильно (3)</th></tr>
+            <tr><td>Вялость, апатия</td><td><input type="radio" name="b3_lethargy" value="0"></td><td><input type="radio" name="b3_lethargy" value="1"></td><td><input type="radio" name="b3_lethargy" value="2"></td><td><input type="radio" name="b3_lethargy" value="3"></td></tr>
+            <tr><td>Беспокойство, возбуждение</td><td><input type="radio" name="b3_anxiety" value="0"></td><td><input type="radio" name="b3_anxiety" value="1"></td><td><input type="radio" name="b3_anxiety" value="2"></td><td><input type="radio" name="b3_anxiety" value="3"></td></tr>
+            <tr><td>Агрессия (необычная)</td><td><input type="radio" name="b3_aggression" value="0"></td><td><input type="radio" name="b3_aggression" value="1"></td><td><input type="radio" name="b3_aggression" value="2"></td><td><input type="radio" name="b3_aggression" value="3"></td></tr>
+            <tr><td>Прячется, избегает контакта</td><td><input type="radio" name="b3_hiding" value="0"></td><td><input type="radio" name="b3_hiding" value="1"></td><td><input type="radio" name="b3_hiding" value="2"></td><td><input type="radio" name="b3_hiding" value="3"></td></tr>
+            <tr><td>Скулит, стонет</td><td><input type="radio" name="b3_whining" value="0"></td><td><input type="radio" name="b3_whining" value="1"></td><td><input type="radio" name="b3_whining" value="2"></td><td><input type="radio" name="b3_whining" value="3"></td></tr>
+          </table>
+          <table class="symptom-table">
+            <tr><th>Аппетит и питье</th><th>Нет</th><th>Слабо</th><th>Умеренно</th><th>Сильно</th></tr>
+            <tr><td>Отказ от еды</td><td><input type="radio" name="b3_appetite_refusal" value="0"></td><td><input type="radio" name="b3_appetite_refusal" value="1"></td><td><input type="radio" name="b3_appetite_refusal" value="2"></td><td><input type="radio" name="b3_appetite_refusal" value="3"></td></tr>
+            <tr><td>Ест меньше обычного</td><td><input type="radio" name="b3_appetite_less" value="0"></td><td><input type="radio" name="b3_appetite_less" value="1"></td><td><input type="radio" name="b3_appetite_less" value="2"></td><td><input type="radio" name="b3_appetite_less" value="3"></td></tr>
+            <tr><td>Ест больше обычного</td><td><input type="radio" name="b3_appetite_more" value="0"></td><td><input type="radio" name="b3_appetite_more" value="1"></td><td><input type="radio" name="b3_appetite_more" value="2"></td><td><input type="radio" name="b3_appetite_more" value="3"></td></tr>
+            <tr><td>Пьет больше обычного</td><td><input type="radio" name="b3_drink_more" value="0"></td><td><input type="radio" name="b3_drink_more" value="1"></td><td><input type="radio" name="b3_drink_more" value="2"></td><td><input type="radio" name="b3_drink_more" value="3"></td></tr>
+            <tr><td>Пьет меньше обычного</td><td><input type="radio" name="b3_drink_less" value="0"></td><td><input type="radio" name="b3_drink_less" value="1"></td><td><input type="radio" name="b3_drink_less" value="2"></td><td><input type="radio" name="b3_drink_less" value="3"></td></tr>
+            <tr><td>Полный отказ от воды</td><td><input type="radio" name="b3_no_water" value="0"></td><td><input type="radio" name="b3_no_water" value="1"></td><td><input type="radio" name="b3_no_water" value="2"></td><td><input type="radio" name="b3_no_water" value="3"></td></tr>
+          </table>
+          <table class="symptom-table">
+            <tr><th>Пищеварение</th><th>Нет (0)</th><th>1-2 раза (1)</th><th>3-5 раз (2)</th><th>6+ раз (3)</th></tr>
+            <tr><td>Рвота</td><td><input type="radio" name="b3_vomit" value="0"></td><td><input type="radio" name="b3_vomit" value="1"></td><td><input type="radio" name="b3_vomit" value="2"></td><td><input type="radio" name="b3_vomit" value="3"></td></tr>
+            <tr><td>Понос</td><td><input type="radio" name="b3_diarrhea" value="0"></td><td><input type="radio" name="b3_diarrhea" value="1"></td><td><input type="radio" name="b3_diarrhea" value="2"></td><td><input type="radio" name="b3_diarrhea" value="3"></td></tr>
+            <tr><td>Запор</td><td><input type="radio" name="b3_constipation" value="0"></td><td><input type="radio" name="b3_constipation" value="1"></td><td><input type="radio" name="b3_constipation" value="2"></td><td><input type="radio" name="b3_constipation" value="3"></td></tr>
+          </table>
+          <div class="form-group">
+            <span class="label">15. Характеристики стула/рвоты (если есть)</span>
+            <div class="radio-inline">
+              <label><input type="checkbox" name="b3_stool_normal" value="yes"> Обычный</label>
+              <label><input type="checkbox" name="b3_stool_blood" value="yes"> С кровью</label>
+              <label><input type="checkbox" name="b3_stool_mucus" value="yes"> Со слизью</label>
+              <label><input type="checkbox" name="b3_stool_foreign" value="yes"> С инородными предметами</label>
+              <label><input type="checkbox" name="b3_stool_worms" value="yes"> С глистами</label>
+              <label><input type="checkbox" name="b3_stool_yellow_green" value="yes"> Желтый/зеленоватый цвет</label>
+              <label><input type="checkbox" name="b3_stool_black" value="yes"> Черный, дегтеобразный</label>
+            </div>
+          </div>
+          <table class="symptom-table">
+            <tr><th>Дыхание</th><th>Нет</th><th>Иногда</th><th>Часто</th><th>Постоянно</th></tr>
+            <tr><td>Кашель</td><td><input type="radio" name="b3_cough" value="0"></td><td><input type="radio" name="b3_cough" value="1"></td><td><input type="radio" name="b3_cough" value="2"></td><td><input type="radio" name="b3_cough" value="3"></td></tr>
+            <tr><td>Чихание</td><td><input type="radio" name="b3_sneeze" value="0"></td><td><input type="radio" name="b3_sneeze" value="1"></td><td><input type="radio" name="b3_sneeze" value="2"></td><td><input type="radio" name="b3_sneeze" value="3"></td></tr>
+            <tr><td>Затрудненное дыхание</td><td><input type="radio" name="b3_breathing_hard" value="0"></td><td><input type="radio" name="b3_breathing_hard" value="1"></td><td><input type="radio" name="b3_breathing_hard" value="2"></td><td><input type="radio" name="b3_breathing_hard" value="3"></td></tr>
+            <tr><td>Хрипы/свист</td><td><input type="radio" name="b3_wheezing" value="0"></td><td><input type="radio" name="b3_wheezing" value="1"></td><td><input type="radio" name="b3_wheezing" value="2"></td><td><input type="radio" name="b3_wheezing" value="3"></td></tr>
+            <tr><td>Одышка</td><td><input type="radio" name="b3_shortness" value="0"></td><td><input type="radio" name="b3_shortness" value="1"></td><td><input type="radio" name="b3_shortness" value="2"></td><td><input type="radio" name="b3_shortness" value="3"></td></tr>
+          </table>
+          <div class="form-group">
+            <span class="label">Глаза и нос</span>
+            <div class="radio-inline" data-exclusive-normal="eyes_nose" data-normal-name="b3_eyes_nose_normal">
+              <label><input type="checkbox" name="b3_eyes_nose_normal" value="yes"> В норме</label>
+              <label><input type="checkbox" name="b3_eyes_discharge" value="yes"> Выделения из глаз</label>
+              <label><input type="checkbox" name="b3_nose_discharge" value="yes"> Выделения из носа</label>
+              <label><input type="checkbox" name="b3_eyes_red" value="yes"> Глаза красные</label>
+              <label><input type="checkbox" name="b3_eyes_cloudy" value="yes"> Глаза мутные</label>
+              <label><input type="checkbox" name="b3_third_eyelid" value="yes"> Виден третий век</label>
+            </div>
+          </div>
+          <table class="symptom-table">
+            <tr><th>Движение</th><th>Нет</th><th>Слабо</th><th>Сильно</th></tr>
+            <tr><td>Хромает</td><td><input type="radio" name="b3_limping" value="0"></td><td><input type="radio" name="b3_limping" value="1"></td><td><input type="radio" name="b3_limping" value="2"></td></tr>
+            <tr><td>Скованные движения</td><td><input type="radio" name="b3_stiff" value="0"></td><td><input type="radio" name="b3_stiff" value="1"></td><td><input type="radio" name="b3_stiff" value="2"></td></tr>
+            <tr><td>Трудно вставать</td><td><input type="radio" name="b3_hard_stand" value="0"></td><td><input type="radio" name="b3_hard_stand" value="1"></td><td><input type="radio" name="b3_hard_stand" value="2"></td></tr>
+            <tr><td>Трудно ложиться</td><td><input type="radio" name="b3_hard_lie" value="0"></td><td><input type="radio" name="b3_hard_lie" value="1"></td><td><input type="radio" name="b3_hard_lie" value="2"></td></tr>
+            <tr><td>Шаткая походка</td><td><input type="radio" name="b3_wobbly" value="0"></td><td><input type="radio" name="b3_wobbly" value="1"></td><td><input type="radio" name="b3_wobbly" value="2"></td></tr>
+            <tr><td>Трясутся лапы</td><td><input type="radio" name="b3_trembling" value="0"></td><td><input type="radio" name="b3_trembling" value="1"></td><td><input type="radio" name="b3_trembling" value="2"></td></tr>
+          </table>
+          <div class="form-group">
+            <span class="label">Мочеиспускание</span>
+            <div class="radio-inline" data-exclusive-normal="urination" data-normal-name="b3_urination_normal">
+              <label><input type="checkbox" name="b3_urination_normal" value="yes"> В норме</label>
+              <label><input type="checkbox" name="b3_urinate_more" value="yes"> Чаще обычного</label>
+              <label><input type="checkbox" name="b3_urinate_less" value="yes"> Реже обычного</label>
+              <label><input type="checkbox" name="b3_urinate_pain" value="yes"> Болезненное мочеиспускание</label>
+              <label><input type="checkbox" name="b3_blood_urine" value="yes"> Кровь в моче</label>
+              <label><input type="checkbox" name="b3_cannot_urinate" value="yes"> Не может помочиться</label>
+              <label><input type="checkbox" name="b3_accidents" value="yes"> Лужи в доме</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">Кожа и шерсть</span>
+            <div class="radio-inline">
+              <label><input type="checkbox" name="b3_itch" value="yes"> Зуд</label>
+              <label><input type="checkbox" name="b3_hair_loss" value="yes"> Выпадение шерсти</label>
+              <label><input type="checkbox" name="b3_dandruff" value="yes"> Перхоть</label>
+              <label><input type="checkbox" name="b3_redness" value="yes"> Покраснения</label>
+              <label><input type="checkbox" name="b3_rash" value="yes"> Сыпь</label>
+              <label><input type="checkbox" name="b3_wounds" value="yes"> Ранки, расчесы</label>
+              <label><input type="checkbox" name="b3_lumps" value="yes"> Шишки</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">21. Есть ли рана/травма?</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b3_has_wound" value="no" id="woundNo"> Нет</label>
+              <label><input type="radio" name="b3_has_wound" value="yes" id="woundYes"> Да</label>
+            </div>
+            <div class="wound-sub" id="woundSub">
+              <div class="form-group">
+                <span class="label">Откуда:</span>
+                <div class="radio-inline">
+                  <label><input type="radio" name="b3_wound_source" value="укус"> укус</label>
+                  <label><input type="radio" name="b3_wound_source" value="порез"> порез</label>
+                  <label><input type="radio" name="b3_wound_source" value="ожог"> ожог</label>
+                  <label><input type="radio" name="b3_wound_source" value="неизвестно"> неизвестно</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <span class="label">Размер:</span>
+                <div class="radio-inline">
+                  <label><input type="radio" name="b3_wound_size" value="маленькая (до 2 см)"> маленькая (до 2 см)</label>
+                  <label><input type="radio" name="b3_wound_size" value="средняя (2-5 см)"> средняя (2-5 см)</label>
+                  <label><input type="radio" name="b3_wound_size" value="большая (более 5 см)"> большая (более 5 см)</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <span class="label">Глубина:</span>
+                <div class="radio-inline">
+                  <label><input type="radio" name="b3_wound_depth" value="поверхностная"> поверхностная</label>
+                  <label><input type="radio" name="b3_wound_depth" value="глубокая"> глубокая</label>
+                  <label><input type="radio" name="b3_wound_depth" value="сквозная"> сквозная</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="block block-step" data-step="4">
+          <h2>БЛОК 4: ИСТОРИЯ ПРОБЛЕМЫ</h2>
+          <div class="form-group">
+            <span class="label">22. Когда начались симптомы?</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b4_when_started" value="Внезапно (несколько часов назад)"> Внезапно</label>
+              <label><input type="radio" name="b4_when_started" value="Сегодня"> Сегодня</label>
+              <label><input type="radio" name="b4_when_started" value="Вчера"> Вчера</label>
+              <label><input type="radio" name="b4_when_started" value="Несколько дней назад"> Несколько дней</label>
+              <label><input type="radio" name="b4_when_started" value="Несколько недель назад"> Несколько недель</label>
+              <label><input type="radio" name="b4_when_started" value="Давно, периодически повторяется"> Давно, периодически</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">23. С чем может быть связано?</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b4_related" value="Не знаю"> Не знаю</label>
+              <label><input type="radio" name="b4_related" value="Была травма (падение, удар)"> Была травма</label>
+              <label><input type="radio" name="b4_related" value="Съел что-то на улице"> Съел на улице</label>
+              <label><input type="radio" name="b4_related" value="Дали новую еду"> Новая еда</label>
+              <label><input type="radio" name="b4_related" value="Контакт с больным животным"> Больное животное</label>
+              <label><input type="radio" name="b4_related" value="Другое"> Другое</label>
+            </div>
+            <div class="form-group conditional-input" data-for="b4_related" data-show-on="Другое">
+              <input type="text" name="b4_related_other" placeholder="Другое" style="margin-top:8px; max-width:280px;">
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">24. Были ли уже у врача по этому поводу?</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b4_been_vet" value="Нет"> Нет</label>
+              <label><input type="radio" name="b4_been_vet" value="Да"> Да</label>
+            </div>
+            <div class="form-group conditional-input" data-for="b4_been_vet" data-show-on="Да">
+              <input type="text" name="b4_been_vet_what" placeholder="Какое лечение назначили" style="margin-top:8px; max-width:320px;">
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="label">25. Давали ли лекарства самостоятельно?</span>
+            <div class="radio-inline">
+              <label><input type="radio" name="b4_self_medication" value="Нет"> Нет</label>
+              <label><input type="radio" name="b4_self_medication" value="Да"> Да</label>
+            </div>
+            <div class="form-group conditional-input" data-for="b4_self_medication" data-show-on="Да">
+              <input type="text" name="b4_self_medication_what" placeholder="Какие" style="margin-top:8px; max-width:320px;">
+            </div>
+          </div>
+        </div>
+
+            <div class="panel-actions">
+              <button type="button" class="btn-next" id="btnToExtra">Далее</button>
+            </div>
+          </form>
+          </div>
+
+          <!-- Шаг 2: Дополнительная информация -->
+          <div class="questionnaire-step" id="stepExtra" style="display:none;">
+            <p class="form-group" style="font-weight:700;">Напишите дополнительную информацию о состоянии здоровья питомца, либо нажмите «Далее».</p>
+            <textarea id="extraText" name="extra_text" rows="5" placeholder="Доп. информация..."></textarea>
+            <div class="panel-actions">
+              <button type="button" class="btn-next" id="btnToPhoto">Далее</button>
+            </div>
+          </div>
+
+          <!-- Шаг 3: Загрузка фото -->
+          <div class="questionnaire-step" id="stepPhoto" style="display:none;">
+            <p class="form-group" style="font-weight:700;">Вы можете загрузить фото питомца, его травмы, либо нажмите «Завершить».</p>
+            <div class="photo-actions">
+              <button type="button" class="btn-secondary" id="addPhotoBtn">Загрузить фото</button>
+            </div>
+            <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
+            <div class="photo-preview" id="photoPreview"></div>
+            <div class="panel-actions">
+              <button type="button" class="btn-finish" id="submitBtn">Завершить</button>
+            </div>
+          </div>
+
+          <!-- Загрузка -->
+          <div class="anamnesis-loading" id="stepLoading" style="display:none;">
+            <div class="spinner"></div>
+            <p>Сбор анамнеза</p>
+          </div>
+
+          <!-- Результат в панели -->
+          <div class="anamnesis-result" id="stepResult" style="display:none;">
+            <div class="result-level" id="resultLevel"></div>
+            <div class="ai-report-frame" id="aiReportFrame">
+              <div class="ai-report-title">Справка ИИ</div>
+              <div class="ai-report-content" id="aiReportContent"></div>
+            </div>
+            <div class="result-db-section">
+              <h4 class="result-db-title">Оценка по медицинской базе знаний</h4>
+              <div class="result-summary" id="resultSummary"></div>
+              <div class="result-conditions" id="resultConditions"></div>
+              <div class="result-actions" id="resultActions"></div>
+            </div>
+            <button type="button" class="btn-close-save" id="btnCloseSave">Закрыть и сохранить анамнез в историю</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Скрытые блоки для совместимости (вне модалки) -->
+  <div class="loading-wrap" id="loadingWrap" style="display:none;"><div class="loading-spinner"></div><p>Анализируем ответы...</p></div>
+  <div class="result-wrap" id="resultWrap" style="display:none;"></div>
+
+  <!-- Личный кабинет (скрытая секция) -->
+  <section class="cabinet-section" id="cabinetSection">
+    <div class="cabinet-passport">
+      <button type="button" class="cabinet-close-btn" id="cabinetCloseBtn" aria-label="Закрыть личный кабинет">×</button>
+      <div class="cabinet-passport-left">
+        <h2 class="cabinet-title">ЛИЧНЫЙ КАБИНЕТ</h2>
+        <div class="cabinet-photo-wrap">
+          <img src="https://s.fotora.ru/0e7c61dbf76dff54.jpeg" alt="Питомец" class="cabinet-photo">
+        </div>
+        <p class="cabinet-field">Имя: <span id="cabinetPetName">—</span></p>
+        <p class="cabinet-field">Порода: <span id="cabinetPetBreed">—</span></p>
+        <p class="cabinet-field">Email: <span id="cabinetEmail">—</span></p>
+      </div>
+      <div class="cabinet-passport-right">
+        <h3 class="cabinet-history-title">История болезни</h3>
+        <ul class="cabinet-history-list" id="cabinetHistoryList"></ul>
+      </div>
+      <button type="button" class="cabinet-logout-btn" id="cabinetLogoutBtn">Выйти из аккаунта</button>
+    </div>
+  </section>
+
+  <!-- Модальное окно: Вход / Регистрация -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-box">
+      <div class="modal-tabs">
+        <button type="button" class="active" data-tab="login">Вход</button>
+        <button type="button" data-tab="register">Регистрация</button>
+      </div>
+      <div id="loginTab">
+        <h3>Вход</h3>
+        <form id="loginForm">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" name="password" required>
+          </div>
+          <div class="buttons">
+            <button type="submit" class="primary">Войти</button>
+            <button type="button" class="secondary" id="closeAuthModal">Закрыть</button>
+          </div>
+        </form>
+      </div>
+      <div id="registerTab" style="display:none;">
+        <h3>Регистрация</h3>
+        <form id="registerForm">
+          <div class="form-group">
+            <label>Имя питомца</label>
+            <input type="text" name="name" placeholder="Кличка питомца">
+          </div>
+          <div class="form-group">
+            <label>Почта</label>
+            <input type="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label>Пароль (не менее 6 символов)</label>
+            <input type="password" name="password" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label>Подтверждение пароля</label>
+            <input type="password" name="password_confirm" required minlength="6">
+          </div>
+          <div class="buttons">
+            <button type="submit" class="primary">Зарегистрироваться</button>
+            <button type="button" class="secondary" id="closeAuthModal2">Закрыть</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Нижний информационный блок -->
+  <section class="footer-info-wrap">
+    <div class="footer-card">
+      <div class="footer-card-left">
+        <h2 class="footer-title">VetGuardian</h2>
+        <p class="footer-subtitle">
+          AI‑ассистент для первичной оценки состояния питомца и подготовки к визиту в клинику.
+        </p>
+        <p class="footer-contact-label">email / поддержка:</p>
+        <p class="footer-contact-value">mierrored@gmail.com</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>2026 VetGuardian</span>
+    </div>
+  </section>
+
+  <script src="/js/app.js?v=7"></script>
+</body>
+</html>
