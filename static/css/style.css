@@ -551,6 +551,13 @@ body {
   margin-bottom: 20px;
   color: var(--text);
 }
+/* Текстовая сводка из БД: переносы и табуляция между колонками */
+.result-summary.result-summary--kb {
+  white-space: pre-wrap;
+  tab-size: 8;
+  -moz-tab-size: 8;
+  font-variant-numeric: tabular-nums;
+}
 
 .result-conditions {
   margin-bottom: 20px;
