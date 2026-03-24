@@ -48,20 +48,36 @@ def analyze():
         except Exception:
             answers = {}
     extra_text = (data.get("extra_text") or "").strip()
+    primary_concern = (data.get("primary_concern") or "").strip()
     photos = data.get("photos") or []
     if not isinstance(photos, list):
         photos = []
 
-    kb_result = evaluate(answers)
-    danger_level = kb_result.get("danger_level", "yellow")
+    if not primary_concern:
+        return jsonify({"ok": False, "error": "Укажите основную проблему, вызывающую беспокойство."}), 400
+
+    kb_result = evaluate(answers, primary_concern=primary_concern)
+    kb_danger_level = kb_result.get("danger_level", "yellow")
     summary = kb_result.get("summary", "")
     conditions = kb_result.get("conditions", [])
     immediate_actions = kb_result.get("immediate_actions", [])
 
-    ai_report = get_ai_report(answers, extra_text=extra_text, photos_count=len(photos))
+    ai_report = get_ai_report(
+        answers,
+        extra_text=extra_text,
+        primary_concern=primary_concern,
+        photos_base64=photos,
+    )
     ai_response = ai_report.get("text", "") if ai_report.get("success") else ""
     if not ai_response and ai_report.get("error"):
         ai_response = "Справка от ИИ временно недоступна: " + str(ai_report.get("error", ""))
+
+    # Верхний индикатор срочности совпадает с оценкой ИИ, если она успешно распарсена
+    ai_urgency = ai_report.get("urgency_level") if ai_report.get("success") else None
+    if ai_urgency in ("green", "yellow", "red"):
+        danger_level = ai_urgency
+    else:
+        danger_level = kb_danger_level
 
     user_id = get_user_from_request()
     try:
@@ -74,10 +90,26 @@ def analyze():
                     (
                         user_id,
                         data.get("pet_id"),
-                        json.dumps({"answers": answers, "extra_text": extra_text, "photos_count": len(photos)}, ensure_ascii=False),
+                        json.dumps(
+                            {
+                                "answers": answers,
+                                "extra_text": extra_text,
+                                "primary_concern": primary_concern,
+                                "photos_count": len(photos),
+                            },
+                            ensure_ascii=False,
+                        ),
                         danger_level,
                         summary,
-                        json.dumps({"kb": kb_result, "ai_response": ai_response}, ensure_ascii=False),
+                        json.dumps(
+                            {
+                                "kb": kb_result,
+                                "ai_response": ai_response,
+                                "kb_danger_level": kb_danger_level,
+                                "ai_urgency_level": ai_urgency,
+                            },
+                            ensure_ascii=False,
+                        ),
                     ),
                 )
 
@@ -153,6 +185,7 @@ def analyze():
 
     result = {
         "danger_level": danger_level,
+        "kb_danger_level": kb_danger_level,
         "summary": summary,
         "conditions": conditions,
         "immediate_actions": immediate_actions,
@@ -172,7 +205,8 @@ def questionnaire_submit():
             answers = json.loads(answers)
         except Exception:
             answers = {}
-    result = evaluate(answers)
+    primary_concern = (data.get("primary_concern") or "").strip()
+    result = evaluate(answers, primary_concern=primary_concern)
     user_id = get_user_from_request()
     if user_id:
         try:
@@ -183,7 +217,10 @@ def questionnaire_submit():
                     (
                         user_id,
                         data.get("pet_id"),
-                        json.dumps(answers, ensure_ascii=False),
+                        json.dumps(
+                            {"answers": answers, "primary_concern": primary_concern},
+                            ensure_ascii=False,
+                        ),
                         result.get("danger_level", "green"),
                         result.get("summary", ""),
                         json.dumps(result, ensure_ascii=False),
@@ -317,7 +354,7 @@ def history_item(case_id: int):
         "summary": row["result_summary"] or "",
         "conditions": kb.get("conditions") or [],
         "immediate_actions": kb.get("immediate_actions") or [],
-        "need_vet": (kb.get("danger_level") or row["danger_level"]) in ("red", "yellow"),
+        "need_vet": row["danger_level"] in ("red", "yellow"),
         "ai_response": ai_response,
     }
     return jsonify({
