@@ -507,8 +507,29 @@ body::before {
 .panel-actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   padding: 16px 24px;
   gap: 12px;
+}
+.panel-actions.panel-actions--with-back {
+  justify-content: space-between;
+}
+.panel-actions .btn-back {
+  padding: 14px 28px;
+  border-radius: var(--radius-btn);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--gray);
+  background: #fff;
+  color: var(--text);
+  transition: transform 0.2s ease, background 0.2s, border-color 0.2s;
+}
+.panel-actions .btn-back:hover {
+  background: var(--pastel);
+  border-color: var(--sky-dark);
+  transform: scale(1.02);
 }
 .panel-actions .btn-next,
 .panel-actions .btn-finish {
