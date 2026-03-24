@@ -88,6 +88,23 @@
   const questionBlocks = document.querySelectorAll(".block-step");
   var currentQuestionBlock = 1;
   var totalQuestionBlocks = questionBlocks.length || 0;
+  var anamnesisPanelBody = document.querySelector(".anamnesis-panel .panel-body");
+
+  function scrollAnamnesisToTop() {
+    if (anamnesisPanelBody) {
+      anamnesisPanelBody.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function updateQuestionnaireNavButtons() {
+    var back = document.getElementById("btnBackQuestionnaire");
+    var pa = back && back.closest(".panel-actions");
+    if (back && pa) {
+      var show = totalQuestionBlocks > 0 && currentQuestionBlock > 1;
+      back.style.display = show ? "" : "none";
+      pa.classList.toggle("panel-actions--with-back", show);
+    }
+  }
 
   function setStep(stepName, percent) {
     if (stepQuestionnaire) stepQuestionnaire.style.display = stepName === "questionnaire" ? "block" : "none";
@@ -109,6 +126,7 @@
       var step = parseInt(b.getAttribute("data-step") || "0", 10);
       b.style.display = (step === 1) ? "block" : "none";
     });
+    updateQuestionnaireNavButtons();
   }
 
   function openAnamnesisModal() {
@@ -119,6 +137,8 @@
     selectedPhotoFiles = [];
     if (photoPreview) photoPreview.innerHTML = "";
     if (extraTextEl) extraTextEl.value = "";
+    var pc = document.getElementById("primaryConcern");
+    if (pc) pc.value = "";
   }
 
   const anamnesisTrigger = document.getElementById("anamnesisTrigger");
@@ -133,11 +153,62 @@
       });
       var pct = 25 + (currentQuestionBlock - 1) * (25 / totalQuestionBlocks);
       setStep("questionnaire", pct);
+      updateQuestionnaireNavButtons();
+      scrollAnamnesisToTop();
     } else {
       setStep("extra", 50);
+      scrollAnamnesisToTop();
     }
   });
-  if (document.getElementById("btnToPhoto")) document.getElementById("btnToPhoto").addEventListener("click", function () { setStep("photo", 75); });
+  var btnBackQuestionnaire = document.getElementById("btnBackQuestionnaire");
+  if (btnBackQuestionnaire) {
+    btnBackQuestionnaire.addEventListener("click", function () {
+      if (currentQuestionBlock <= 1) return;
+      currentQuestionBlock -= 1;
+      questionBlocks.forEach(function (b) {
+        var step = parseInt(b.getAttribute("data-step") || "0", 10);
+        b.style.display = (step === currentQuestionBlock) ? "block" : "none";
+      });
+      var pct = 25 + (currentQuestionBlock - 1) * (25 / totalQuestionBlocks);
+      setStep("questionnaire", pct);
+      updateQuestionnaireNavButtons();
+      scrollAnamnesisToTop();
+    });
+  }
+  if (document.getElementById("btnToPhoto")) document.getElementById("btnToPhoto").addEventListener("click", function () {
+    var pc = document.getElementById("primaryConcern");
+    var v = pc ? (pc.value || "").trim() : "";
+    if (!v) {
+      alert("Укажите основную проблему, вызывающую беспокойство.");
+      if (pc) pc.focus();
+      return;
+    }
+    setStep("photo", 75);
+    scrollAnamnesisToTop();
+  });
+  var btnBackToQuestionnaire = document.getElementById("btnBackToQuestionnaire");
+  if (btnBackToQuestionnaire) {
+    btnBackToQuestionnaire.addEventListener("click", function () {
+      if (totalQuestionBlocks > 0) {
+        currentQuestionBlock = totalQuestionBlocks;
+        questionBlocks.forEach(function (b) {
+          var step = parseInt(b.getAttribute("data-step") || "0", 10);
+          b.style.display = (step === currentQuestionBlock) ? "block" : "none";
+        });
+        var pct = 25 + (currentQuestionBlock - 1) * (25 / totalQuestionBlocks);
+        setStep("questionnaire", pct);
+        updateQuestionnaireNavButtons();
+      }
+      scrollAnamnesisToTop();
+    });
+  }
+  var btnBackToExtra = document.getElementById("btnBackToExtra");
+  if (btnBackToExtra) {
+    btnBackToExtra.addEventListener("click", function () {
+      setStep("extra", 50);
+      scrollAnamnesisToTop();
+    });
+  }
 
   // Подвопросы раны: показывать только при выборе "Да"
   var woundYes = document.getElementById("woundYes");
@@ -314,37 +385,77 @@
   function runAnamnesisSubmit() {
     const answers = getFormAnswers(questionnaireForm);
     const extra_text = extraTextEl ? (extraTextEl.value || "").trim() : "";
+    const primaryEl = document.getElementById("primaryConcern");
+    const primary_concern = primaryEl ? (primaryEl.value || "").trim() : "";
+    if (!primary_concern) {
+      alert("Укажите основную проблему, вызывающую беспокойство.");
+      if (primaryEl) primaryEl.focus();
+      setStep("extra", 50);
+      return;
+    }
     setStep("loading", 90);
     if (submitBtn) submitBtn.disabled = true;
+
+    var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timeoutId = controller
+      ? setTimeout(function () { try { controller.abort(); } catch (e) {} }, 240000)
+      : null;
 
     Promise.all(selectedPhotoFiles.map(fileToBase64))
       .then(function (photosBase64) {
         return fetch(API + "/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify({ answers: answers, extra_text: extra_text, photos: photosBase64 }),
+          body: JSON.stringify({
+            answers: answers,
+            extra_text: extra_text,
+            primary_concern: primary_concern,
+            photos: photosBase64,
+          }),
+          signal: controller ? controller.signal : undefined,
         });
       })
-      .then(function (r) { return r.json(); })
-      .then(function (res) {
+      .then(function (r) {
+        return r.text().then(function (text) {
+          var data = {};
+          if (text) {
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              data = { ok: false, error: text || r.statusText || "Ошибка сервера" };
+            }
+          }
+          return { httpOk: r.ok, status: r.status, data: data };
+        });
+      })
+      .then(function (wrapped) {
+        if (timeoutId) clearTimeout(timeoutId);
         if (submitBtn) submitBtn.disabled = false;
-        if (res.ok && res.result) {
+        var res = wrapped.data;
+        if (wrapped.httpOk && res.ok && res.result) {
           setStep("result", 100);
           showResult(res.result);
-          // обновляем историю на главной
           loadHistoryStrip();
-          // и в личном кабинете, если он сейчас открыт
           if (cabinetSection && cabinetSection.classList.contains("visible")) {
             showCabinet();
           }
         } else {
-          alert(res.error || "Ошибка при анализе");
+          var msg = (res && res.error) || "Ошибка при анализе";
+          if (wrapped.status === 413) {
+            msg = "Запрос слишком большой (фото). Уменьшите размер снимков или отправьте без фото. На сервере проверьте лимит client_max_body_size (nginx).";
+          }
+          alert(msg);
           setStep("photo", 75);
         }
       })
       .catch(function (err) {
+        if (timeoutId) clearTimeout(timeoutId);
         if (submitBtn) submitBtn.disabled = false;
-        alert("Ошибка сети");
+        if (err && err.name === "AbortError") {
+          alert("Превышено время ожидания. Попробуйте уменьшить фото или отправить без снимков.");
+        } else {
+          alert("Ошибка сети");
+        }
         setStep("photo", 75);
       });
   }
@@ -365,7 +476,10 @@
       resultLevel.className = "result-level " + level;
     }
     var summary = result.summary || "";
-    if (resultSummary) resultSummary.innerHTML = escapeHtml(summary).replace(/\n/g, "<br>");
+    if (resultSummary) {
+      resultSummary.classList.add("result-summary--kb");
+      resultSummary.textContent = summary;
+    }
     if (resultConditions) {
       const conds = result.conditions || [];
       resultConditions.innerHTML = conds.length
