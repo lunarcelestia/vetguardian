@@ -754,8 +754,15 @@ body::before {
 /* --- Карточки пород в разделе «О собаках» --- */
 .breed-list-view {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: 20px;
+}
+
+@media (max-width: 400px) {
+  .breed-list-view {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
 }
 .breed-card {
   background: #ffffff;
@@ -1427,7 +1434,6 @@ body::before {
   margin: 0;
   padding-left: 18px;
 }
-}
 
 /* Кнопки выбора в разделах статей */
 .selector-wrap {
@@ -1519,14 +1525,14 @@ body::before {
 
 .article-list {
   display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-right: 12px;
+}
 
 /* Больше пространства и высота под график поведения */
 .article-panel#articleByBehavior .chart-block {
   min-height: 320px;
-}
-  flex-direction: column;
-  gap: 8px;
-  margin-right: 12px;
 }
 .article-list button {
   padding: 10px 18px;
@@ -1594,6 +1600,33 @@ body::before {
   height: 320px !important;
 }
 
+@media (max-width: 768px) {
+  .breed-health-chart .chart-block,
+  .age-problems-chart .chart-block {
+    height: auto !important;
+    min-height: 260px;
+  }
+  .article-panel .chart-block canvas {
+    height: 260px !important;
+  }
+  .article-panel#articleByBehavior .chart-block {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .breed-health-chart .chart-block,
+  .age-problems-chart .chart-block {
+    min-height: 220px;
+  }
+  .article-panel .chart-block canvas {
+    height: 220px !important;
+  }
+  .article-panel#articleByBehavior .chart-block {
+    min-height: 220px;
+  }
+}
+
 /* Нижний информационный блок */
 .footer-info-wrap {
   background: hsla(0, 0%, 32%, 1);
@@ -1639,8 +1672,39 @@ body::before {
   font-size: 0.9rem;
 }
 
+/* Планшеты и узкие окна: сетки и контент без изменения десктопного макета */
+@media (max-width: 900px) {
+  .age-list-view {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;
+  }
+  .age-list-view .age-card:nth-child(4),
+  .age-list-view .age-card:nth-child(5) {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .age-card {
+    max-width: none;
+  }
+  .breed-list-view {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .age-list-view {
+    grid-template-columns: 1fr;
+  }
+  .breed-list-view {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Дополнительная адаптивность под планшеты и телефоны */
 @media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
   .header {
     padding: 10px 16px;
   }
@@ -1671,6 +1735,7 @@ body::before {
     padding: 0 1.5rem;
     align-items: flex-start;
     justify-content: center;
+    max-width: 100%;
   }
   .hero-banner-title {
     font-size: 2.8rem;
@@ -1682,12 +1747,75 @@ body::before {
     padding: 14px 32px;
     font-size: 1.2rem;
   }
+  .pet-info-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
   .pet-info-cards {
     gap: 3rem;
   }
   .pet-info-card img {
     width: 280px;
     height: 280px;
+  }
+  .breed-breadcrumb,
+  .age-breadcrumb,
+  .behavior-breadcrumb {
+    flex-wrap: wrap;
+  }
+  .breed-article-tabs,
+  .age-article-tabs {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .breed-article-title {
+    font-size: 1.5rem;
+  }
+  .age-article-title,
+  .behavior-article-title {
+    font-size: 1.45rem;
+  }
+  .chart-block h4 {
+    font-size: 1.25rem;
+  }
+  .anamnesis-overlay {
+    padding: 12px;
+  }
+  .anamnesis-panel {
+    max-height: min(90vh, 100dvh);
+  }
+  .anamnesis-panel .stage-title {
+    font-size: 1.35rem;
+    padding-left: 12px;
+    padding-right: 52px;
+  }
+  .anamnesis-panel .panel-body {
+    padding-left: 12px;
+    padding-right: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .anamnesis-panel .block-step {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .anamnesis-panel .symptom-table {
+    min-width: 480px;
+  }
+  .panel-actions {
+    flex-wrap: wrap;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .clinics-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .yandex-map-container {
+    min-height: 280px;
+  }
+  .footer-info-wrap {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 
@@ -1701,9 +1829,13 @@ body::before {
   .hero {
     padding-top: 110px;
   }
+  .hero-banner {
+    border-radius: 20px;
+  }
   .hero-banner-inner {
     padding: 12px 1rem 18px;
     justify-content: flex-start;
+    max-width: 100%;
   }
   .hero-banner-title {
     font-size: 2rem;
@@ -1713,6 +1845,8 @@ body::before {
   }
   .hero-actions .btn-start {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     text-align: center;
     padding: 12px 24px;
     font-size: 1.05rem;
@@ -1758,5 +1892,15 @@ body::before {
   }
   .chart-block {
     padding: 10px 10px;
+  }
+  .pet-info-title {
+    font-size: 1.75rem;
+  }
+  .breed-article-title {
+    font-size: 1.35rem;
+  }
+  .age-article-title,
+  .behavior-article-title {
+    font-size: 1.3rem;
   }
 }
