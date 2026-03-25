@@ -7,7 +7,8 @@ from flask import Blueprint, request, jsonify
 from config import Config
 from database import get_connection
 from knowledge_engine import evaluate
-from openai_proxy_service import get_ai_report
+from openai_proxy_service import get_ai_report, get_quick_check_brief
+from llama_service import quick_check_scores_and_chart
 from routes.auth import get_user_from_request
 
 api_bp = Blueprint("api", __name__)
@@ -116,7 +117,85 @@ def analyze():
             # извлекаем параметры для статистики
             breed = (answers.get("b1_breed_name") or answers.get("b1_breed") or "").strip()
             age_group = (answers.get("b1_age") or "").strip()
-            symptoms = [c.get("name", "") for c in kb_result.get("conditions", []) if c.get("name")]
+            kb_conditions = kb_result.get("conditions", []) or []
+
+            # Для записи "сырого" анамнеза в БД (пока используем названия состояний).
+            symptoms = [c.get("name", "") for c in kb_conditions if c.get("name")]
+
+            # Для графиков используем систему органов (labels из UI).
+            # Это исправляет ситуацию, когда в disease_frequency/complications_frequency
+            # накапливались названия медицинских состояний (вроде "Гастрит..."),
+            # из-за чего графики искажались.
+            condition_to_chart_system = {
+                # ЖКТ
+                "poisoning": "Гастроэнтерология",
+                "gastritis": "Гастроэнтерология",
+                "mild_gi_upset": "Гастроэнтерология",
+                "gastroenteritis_acute_petsure": "Гастроэнтерология",
+                "young_pet_gi_petsure": "Гастроэнтерология",
+                "colitis_mucus": "Гастроэнтерология",
+                "foreign_body": "Гастроэнтерология",
+                "hemorrhagic_gastro": "Гастроэнтерология",
+                "bloat_gdv_suspect": "Гастроэнтерология",
+                "constipation_severe": "Гастроэнтерология",
+                # Поджелудочная/печень
+                "hepatobiliary_hint": "Гепатология/Панкреатология",
+                "pancreatitis_suspect": "Гепатология/Панкреатология",
+
+                # Кожа/аллергия
+                "allergy_skin": "Дерматология",
+                "skin_infection_petsure": "Дерматология",
+
+                # Паразиты
+                "parasites": "Инфекции и паразитарные болезни",
+
+                # Мочевыделительная система
+                "uti": "Нефрология/Урология",
+                "blockage_urinary": "Нефрология/Урология",
+                "kidney_concern": "Нефрология/Урология",
+
+                # Дыхание / ЛОР
+                "respiratory_infection": "Пульмонология",
+                "dyspnea": "Пульмонология",
+                "boas_brachycephalic_petsure": "Пульмонология",
+                "upper_respiratory_complex": "Оториноларингология (ЛОР)",
+
+                # Сердце
+                "cardiac_respiratory_pattern": "Кардиология",
+
+                # Неврология
+                "stress_behavior": "Неврология",
+                "epilepsy_seizure": "Неврология",
+
+                # Глаза
+                "conjunctivitis": "Офтальмология",
+                "eye_condition_severe": "Офтальмология",
+
+                # Опорно-двигательный аппарат
+                "wound_infection": "Травматология/Ортопедия",
+                "trauma_ortho": "Травматология/Ортопедия",
+                "trauma_general_petsure": "Травматология/Ортопедия",
+                "arthritis_degenerative_petsure": "Травматология/Ортопедия",
+                "ivdd_spinal_issue_petsure": "Травматология/Ортопедия",
+
+                # Эндокринология
+                "diabetes_concern": "Эндокринология",
+                "cushing_like_pattern": "Эндокринология",
+
+                # Онкология
+                "neoplasia_senior_petsure": "Онкология",
+                "skin_masses_petsure": "Онкология",
+            }
+
+            chart_systems = []
+            seen_sys = set()
+            for c in kb_conditions:
+                cid = c.get("id") or ""
+                sys = condition_to_chart_system.get(cid)
+                if sys and sys not in seen_sys:
+                    chart_systems.append(sys)
+                    seen_sys.add(sys)
+
             behaviors = []  # TODO: заполнить при появлении явных ответов по поведению
 
             # сохраняем «сырой» кейс для статистики (в том числе анонимных пользователей)
@@ -132,7 +211,7 @@ def analyze():
             )
 
             # --- Инкрементальное обновление статистики по породе ---
-            if breed and symptoms:
+            if breed and chart_systems:
                 row = conn.execute(
                     "SELECT disease_frequency, total_cases FROM breed_stats WHERE breed_name = ?",
                     (breed,),
@@ -143,18 +222,23 @@ def analyze():
                     except Exception:
                         freq = {}
                     total_cases = row["total_cases"] or 0
+                    # В исходных данных frequency часто "проценты" на базе 100 случаев.
+                    # Чтобы наши +1 инкременты начали масштабироваться корректно,
+                    # считаем базовый знаменатель равным 100, если он ещё не инициализирован.
+                    if total_cases == 0:
+                        total_cases = 100
                     total_cases += 1
-                    for name in symptoms:
-                        if not name:
+                    for sys in chart_systems:
+                        if not sys:
                             continue
-                        freq[name] = freq.get(name, 0) + 1
+                        freq[sys] = freq.get(sys, 0) + 1
                     conn.execute(
                         "UPDATE breed_stats SET disease_frequency = ?, total_cases = ?, updated_at = CURRENT_TIMESTAMP WHERE breed_name = ?",
                         (json.dumps(freq, ensure_ascii=False), total_cases, breed),
                     )
 
             # --- Инкрементальное обновление статистики по возрасту ---
-            if age_group and symptoms:
+            if age_group and chart_systems:
                 row = conn.execute(
                     "SELECT complications_frequency, total_cases FROM age_stats WHERE age_group = ?",
                     (age_group,),
@@ -165,11 +249,13 @@ def analyze():
                     except Exception:
                         freq_age = {}
                     age_total = row["total_cases"] or 0
+                    if age_total == 0:
+                        age_total = 100
                     age_total += 1
-                    for name in symptoms:
-                        if not name:
+                    for sys in chart_systems:
+                        if not sys:
                             continue
-                        freq_age[name] = freq_age.get(name, 0) + 1
+                        freq_age[sys] = freq_age.get(sys, 0) + 1
                     conn.execute(
                         "UPDATE age_stats SET complications_frequency = ?, total_cases = ?, updated_at = CURRENT_TIMESTAMP WHERE age_group = ?",
                         (json.dumps(freq_age, ensure_ascii=False), age_total, age_group),
@@ -193,6 +279,219 @@ def analyze():
         "ai_response": ai_response,
     }
     return jsonify({"ok": True, "result": result})
+
+
+@api_bp.route("/api/quick-check", methods=["POST"])
+def quick_check():
+    """
+    Быстрый опрос: Llama рассчитывает шкалы и данные для радиальной диаграммы,
+    ProxyAPI возвращает короткую справку.
+    """
+    data = request.get_json() or {}
+    answers = data.get("answers") or data.get("quick_answers") or {}
+    if isinstance(answers, str):
+        try:
+            answers = json.loads(answers)
+        except Exception:
+            answers = {}
+
+    # ожидаем keys: q1..q10
+    expected = [f"q{i}" for i in range(1, 11)]
+    missing = [k for k in expected if not answers.get(k)]
+    if missing:
+        return jsonify({"ok": False, "error": "Не заполнены ответы быстрого опроса."}), 400
+
+    llama_result = {}
+    try:
+        llama_result = quick_check_scores_and_chart(answers)
+    except Exception as e:
+        llama_result = {}
+
+    # Fallback: если Llama не вернула ожидаемую структуру, оценим грубо по текстам.
+    def _contains_any(s: str, parts) -> bool:
+        ss = (s or "").lower()
+        return any((p or "").lower() in ss for p in parts if p)
+
+    def _score_from_q1(v: str) -> float:
+        if _contains_any(v, ["идеальном", "прощупываются", "талия", "ребра прощупываются"]):
+            return 10.0
+        if _contains_any(v, ["Небольшие отклонения", "с легким трудом", "легким трудом"]):
+            return 8.0
+        if _contains_any(v, ["Умеренное отклонение", "с трудом", "талия выражена слабо"]):
+            return 6.0
+        if _contains_any(v, ["Критично", "ребра не прощупываются", "видны ребра и кости"]):
+            return 3.0
+        return 6.0
+
+    # простые эвристики для 5 шкал
+    q1 = answers.get("q1", "")
+    q2 = answers.get("q2", "")
+    q3 = answers.get("q3", "")
+    q4 = answers.get("q4", "")
+    q5 = answers.get("q5", "")
+    q6 = answers.get("q6", "")
+    q7 = answers.get("q7", "")
+    q8 = answers.get("q8", "")
+    q9 = answers.get("q9", "")
+    q10 = answers.get("q10", "")
+
+    physical_form = _score_from_q1(q1)
+
+    def _score_from_appetite(v: str) -> float:
+        if _contains_any(v, ["Отказ от еды более суток", "отказ от еды более суток", "отказ от еды"]):
+            return 3.0
+        if _contains_any(v, ["Аппетит заметно усилен", "заметно усилен", "просит еду чаще", "быстрее съедает"]):
+            return 6.0
+        if _contains_any(v, ["Аппетит немного снизился", "немного снизился", "ест меньше", "но в целом порцию съедает"]):
+            return 8.0
+        if _contains_any(v, ["Без изменений", "ест стабильно", "как обычно"]):
+            return 10.0
+        return 6.0
+
+    appetite_score = _score_from_appetite(q2)
+    vomiting_diarrhea_score = (
+        3.0
+        if _contains_any(q3, ["несколько раз в неделю", "регулярно/тяжело", "требуется помощь", "обезвоживания"])
+        else 4.0
+        if _contains_any(q3, ["примерно 1 раз в неделю", "часте", "иногда требуется коррекция питания"])
+        else 7.0
+        if _contains_any(q3, ["1–2 раза в месяц", "эпизодически", "проходит самостоятельно"])
+        else 10.0
+    )
+
+    water_score = (
+        10.0
+        if _contains_any(q6, ["Пьет умеренно", "привычное количество"])
+        else 7.0
+        if _contains_any(q6, ["Пьет заметно больше", "заметно больше", "Пьет заметно меньше", "заметно меньше"])
+        else 3.0
+        if _contains_any(q6, ["очень мало", "отказывается от воды"])
+        else 6.0
+    )
+
+    digestion_hydration = (appetite_score + vomiting_diarrhea_score + water_score) / 3.0
+
+    energy_score = (
+        10.0
+        if _contains_any(q4, ["Активен", "играет", "обычные нагрузки"])
+        else 8.0
+        if _contains_any(q4, ["Немного снизилась активность", "но нагрузки переносит", "стал меньше играть"])
+        else 6.0
+        if _contains_any(q4, ["Быстрее устает", "заметно меньше играет"])
+        else 3.0
+    )
+
+    pain_score = (
+        10.0
+        if _contains_any(q8, ["Движется свободно", "без скованности"])
+        else 8.0
+        if _contains_any(q8, ["Легкая скованность после сна", "после сна", "проходит через несколько минут"])
+        else 6.0
+        if _contains_any(q8, ["после нагрузки", "после разминки двигается нормально"])
+        else 3.0
+    )
+    energy_mobility = (energy_score + pain_score) / 2.0
+
+    external_fur = (
+        10.0
+        if _contains_any(q5, ["Шерсть гладкая", "без залысин", "кожа чистая"])
+        else 8.0
+        if _contains_any(q5, ["Легкие изменения", "единичная перхоть", "зуд минимальный"])
+        else 6.0
+        if _contains_any(q5, ["Умеренные проблемы", "сухость", "корки", "периодический зуд"])
+        else 3.0
+    )
+
+    external_eyes = (
+        10.0
+        if _contains_any(q9, ["Чистые", "без выделений", "без покраснений"])
+        else 8.0
+        if _contains_any(q9, ["Легкие изменения", "без гноя"])
+        else 6.0
+        if _contains_any(q9, ["Умеренные выделения", "возможен зуд", "частое трение лапой"])
+        else 3.0
+    )
+    external_state = (external_fur + external_eyes) / 2.0
+
+    urination_score = (
+        10.0
+        if _contains_any(q7, ["Без изменений", "режим привычный"])
+        else 7.0
+        if _contains_any(q7, ["чаще проситься", "мочится чаще", "без крови"])
+        else 5.0
+        if _contains_any(q7, ["мало мочи", "частые позывы", "как будто не может нормально помочиться"])
+        else 3.0
+    )
+
+    behavior_score = (
+        10.0
+        if _contains_any(q10, ["Без изменений", "прежние"])
+        else 8.0
+        if _contains_any(q10, ["Немного изменилось", "но ориентируется и реагирует"])
+        else 6.0
+        if _contains_any(q10, ["Заметные изменения", "выраженная тревожность", "отстраненность"])
+        else 3.0
+    )
+    behavior_nervous = (urination_score + behavior_score) / 2.0
+
+    computed_parameters = {
+        "physical_form": {"score": round(physical_form, 1), "hint": ""},
+        "digestion_hydration": {"score": round(digestion_hydration, 1), "hint": ""},
+        "energy_mobility": {"score": round(energy_mobility, 1), "hint": ""},
+        "external_state": {"score": round(external_state, 1), "hint": ""},
+        "behavior_nervous": {"score": round(behavior_nervous, 1), "hint": ""},
+    }
+    computed_overall = round(sum(p["score"] for p in computed_parameters.values()) / 5.0, 1)
+    computed_danger = "green" if computed_overall >= 8 else "yellow" if computed_overall >= 5 else "red"
+    computed_chart = {
+        "type": "radar",
+        "labels": [
+            "Физическая форма",
+            "Пищеварение и водный баланс",
+            "Энергия и подвижность",
+            "Внешнее состояние",
+            "Поведение и нервная система",
+        ],
+        "values": [
+            computed_parameters["physical_form"]["score"],
+            computed_parameters["digestion_hydration"]["score"],
+            computed_parameters["energy_mobility"]["score"],
+            computed_parameters["external_state"]["score"],
+            computed_parameters["behavior_nervous"]["score"],
+        ],
+    }
+
+    danger_level = (llama_result or {}).get("danger_level") or computed_danger
+    parameters = (llama_result or {}).get("parameters") or computed_parameters
+    overall_score = (llama_result or {}).get("overall_score") or computed_overall
+    chart = (llama_result or {}).get("chart") or computed_chart
+
+    # Короткий текст — ProxyAPI (желательно).
+    ai_brief = {"success": False, "text": "", "urgency_level": None, "error": None}
+    try:
+        ai_brief = get_quick_check_brief(
+            answers,
+            danger_hint=danger_level,
+            overall_score=overall_score,
+            parameters=parameters,
+        )
+    except Exception:
+        ai_brief = {"success": False, "text": "", "urgency_level": None, "error": "quick brief failed"}
+
+    ai_text = ai_brief.get("text") or ""
+    if not ai_text:
+        ai_text = "По итогам быстрого опроса стоит обратить внимание на указанные параметры. При ухудшении симптомов или появлении крови/резкого отказа от воды — обратитесь к ветеринару срочно."
+
+    return jsonify(
+        {
+            "ok": True,
+            "danger_level": danger_level,
+            "overall_score": overall_score,
+            "parameters": parameters,
+            "chart": chart,
+            "ai_text": ai_text,
+        }
+    )
 
 
 @api_bp.route("/api/questionnaire/submit", methods=["POST"])
@@ -374,18 +673,25 @@ def breeds():
     with get_connection() as conn:
         rows = conn.execute(
             """SELECT id, breed_name, description, common_issues,
-                      typical_diseases, disease_frequency, trait_frequency
+                      typical_diseases, disease_frequency, trait_frequency, total_cases
                FROM breed_stats ORDER BY breed_name""",
         ).fetchall()
     items = []
     for r in rows:
+        denom = r["total_cases"] or 0
+        if denom == 0:
+            denom = 100
+        disease_freq_counts = json.loads(r["disease_frequency"] or "{}")
+        disease_freq_percent = {
+            k: (float(v) / float(denom)) * 100.0 for k, v in disease_freq_counts.items()
+        }
         items.append({
             "id": r["id"],
             "breed_name": r["breed_name"],
             "description": r["description"],
             "common_issues": r["common_issues"],
             "typical_diseases": json.loads(r["typical_diseases"] or "[]"),
-            "disease_frequency": json.loads(r["disease_frequency"] or "{}"),
+            "disease_frequency": disease_freq_percent,
             "trait_frequency": json.loads(r["trait_frequency"] or "{}"),
         })
     return jsonify({"ok": True, "items": items})
@@ -396,7 +702,7 @@ def breed_detail(breed_id: int):
     with get_connection() as conn:
         r = conn.execute(
             """SELECT id, breed_name, description, common_issues,
-                      typical_diseases, disease_frequency, trait_frequency
+                      typical_diseases, disease_frequency, trait_frequency, total_cases
                FROM breed_stats WHERE id = ?""",
             (breed_id,),
         ).fetchone()
@@ -408,7 +714,10 @@ def breed_detail(breed_id: int):
         "description": r["description"],
         "common_issues": r["common_issues"],
         "typical_diseases": json.loads(r["typical_diseases"] or "[]"),
-        "disease_frequency": json.loads(r["disease_frequency"] or "{}"),
+        "disease_frequency": (lambda counts, denom: {k: (float(v) / float(denom)) * 100.0 for k, v in counts.items()})(
+            json.loads(r["disease_frequency"] or "{}"),
+            (r["total_cases"] or 0) or 100
+        ),
         "trait_frequency": json.loads(r["trait_frequency"] or "{}"),
     }
     return jsonify({"ok": True, "item": item})
@@ -420,18 +729,23 @@ def ages():
     with get_connection() as conn:
         rows = conn.execute(
             """SELECT id, age_group, description, care_recommendations,
-                      common_problems, complications_frequency, diseases_by_care
+                      common_problems, complications_frequency, diseases_by_care, total_cases
                FROM age_stats ORDER BY id""",
         ).fetchall()
     items = []
     for r in rows:
+        denom = r["total_cases"] or 0
+        if denom == 0:
+            denom = 100
+        comp_counts = json.loads(r["complications_frequency"] or "{}")
+        comp_percent = {k: (float(v) / float(denom)) * 100.0 for k, v in comp_counts.items()}
         items.append({
             "id": r["id"],
             "age_group": r["age_group"],
             "description": r["description"],
             "care_recommendations": r["care_recommendations"],
             "common_problems": r["common_problems"],
-            "complications_frequency": json.loads(r["complications_frequency"] or "{}"),
+            "complications_frequency": comp_percent,
             "diseases_by_care": json.loads(r["diseases_by_care"] or "{}"),
         })
     return jsonify({"ok": True, "items": items})
