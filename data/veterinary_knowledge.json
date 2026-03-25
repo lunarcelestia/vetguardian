@@ -1,4 +1,11 @@
 {
+  "meta": {
+    "references": [
+      "PetSure Australia. Pet Health Monitor 2024 (обзор страховых случаев, частые категории: ЖКТ, кожа/аллергия, уши у собак; у кошек — ЖКТ, травмы, МВП, глаза; у пожилых — артрит, онкология). https://petsure.com.au/pet-health-monitor-2024/",
+      "PetSure. Living with older pets (возрастные риски). https://petsure.com.au/knowledge-hub/living-with-older-pets/"
+    ],
+    "note": "Описания состояний обобщают типичные ветеринарные картины и публичную статистику обращений; окончательный диагноз возможен только при осмотре врачом."
+  },
   "conditions": [
     {
       "id": "poisoning",
@@ -16,16 +23,40 @@
     },
     {
       "id": "gastritis",
-      "name": "Гастрит",
-      "description": "Воспаление желудка. Проявляется рвотой натощак или после еды, снижением аппетита, вялостью.",
+      "name": "Гастрит / хроническое раздражение желудка",
+      "description": "Рвота на фоне выраженного снижения аппетита без доминирующей диареи. PetSure относит расстройства ЖКТ к числу наиболее частых причин обращений; хронические и повторяющиеся рвоты требуют очного обследования.",
       "danger_level": "yellow",
+      "breed_modifiers": {
+        "cavoodle": 1.092,
+        "кавудл": 1.092,
+        "dachshund": 0.944,
+        "такса": 0.944,
+        "golden retriever": 1.116,
+        "золотист": 1.116,
+        "retriever": 1.116,
+        "labrador": 0.984,
+        "лабрадор": 0.984,
+        "french bulldog": 1.096,
+        "француз": 1.096,
+        "булдог": 1.096,
+        "groodle": 1.024,
+        "гудл": 1.024,
+        "border collie": 0.932,
+        "бордер": 0.932,
+        "колли": 0.932,
+        "staffordshire": 0.956,
+        "стаффорд": 0.956,
+        "стаффи": 0.956,
+        "german shepherd": 0.916,
+        "немец": 0.916,
+        "овчарка": 0.916
+      },
       "symptom_rules": [
-        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.5},
-        {"key": "b3_appetite_less", "value": "1", "match": "min", "weight": 1.2},
-        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 0.8},
-        {"key": "b4_when_started", "value": ["Несколько дней назад", "Несколько недель назад"], "weight": 0.8}
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.4},
+        {"key": "b3_appetite_less", "value": "1", "match": "min", "weight": 1.6},
+        {"key": "b3_appetite_refusal", "value": "1", "match": "min", "weight": 1.6}
       ],
-      "recommendations": ["Голодная диета 12–24 часа, затем дробное питание легкой пищей.", "Запись к ветеринару для осмотра и возможной гастроскопии."]
+      "recommendations": ["Не откладывать визит к ветеринару при повторной рвоте и снижении аппетита.", "Диета и голодание — только по рекомендации врача после осмотра."]
     },
     {
       "id": "uti",
@@ -97,6 +128,31 @@
       "name": "Аллергия / дерматит",
       "description": "Зуд, покраснение, расчёсы, сыпь, выпадение шерсти. Часто пищевая или контактная аллергия.",
       "danger_level": "green",
+      "breed_modifiers": {
+        "cavoodle": 0.73,
+        "кавудл": 0.73,
+        "dachshund": 0.66,
+        "такса": 0.66,
+        "golden retriever": 1.02,
+        "золотист": 1.02,
+        "retriever": 1.02,
+        "labrador": 0.98,
+        "лабрадор": 0.98,
+        "french bulldog": 1.82,
+        "француз": 1.82,
+        "булдог": 1.82,
+        "groodle": 0.98,
+        "гудл": 0.98,
+        "border collie": 0.49,
+        "бордер": 0.49,
+        "колли": 0.49,
+        "staffordshire": 1.57,
+        "стаффорд": 1.57,
+        "стаффи": 1.57,
+        "german shepherd": 1.1,
+        "немец": 1.1,
+        "овчарка": 1.1
+      },
       "symptom_rules": [
         {"key": "b3_itch", "value": "yes", "weight": 1.5},
         {"key": "b3_redness", "value": "yes", "weight": 1.2},
@@ -189,14 +245,16 @@
     {
       "id": "mild_gi_upset",
       "name": "Лёгкое расстройство ЖКТ",
-      "description": "Единичная рвота или мягкий стул при сохранном общем состоянии и аппетите. Часто из-за смены корма или переедания.",
+      "description": "Кратковременная рвота при сохранном аппетите и без вялости — типично при смене корма или переедании (в материалах PetSure для профилактики ЖКТ у кошек подчёркивают постепенный переход корма).",
       "danger_level": "green",
       "symptom_rules": [
-        {"key": "b3_vomit", "value": "1", "weight": 1.0},
-        {"key": "b3_lethargy", "value": "0", "weight": 0.8},
-        {"key": "b3_appetite_refusal", "value": "0", "weight": 0.8}
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_diarrhea", "value": "0", "weight": 1.0},
+        {"key": "b3_lethargy", "value": "0", "weight": 1.0},
+        {"key": "b3_appetite_refusal", "value": "0", "weight": 1.0},
+        {"key": "b3_appetite_less", "value": "0", "weight": 0.8}
       ],
-      "recommendations": ["Голодная пауза 6–12 часов, затем лёгкая еда маленькими порциями.", "Наблюдение. При повторной рвоте или поносе — к ветеринару."]
+      "recommendations": ["Короткая голодная пауза и наблюдение; воду оставить доступной.", "При усилении симптомов, крови в рвоте или вялости — сразу к ветеринару."]
     },
     {
       "id": "conjunctivitis",
@@ -248,6 +306,349 @@
         {"key": "b4_related", "value": "Была травма (падение, удар)", "weight": 0.8}
       ],
       "recommendations": ["Не мять и не греть сильно без назначения врача.", "Запись к ветеринару для осмотра, при необходимости — УЗИ молочной железы и антибиотикотерапия."]
+    },
+    {
+      "id": "gastroenteritis_acute_petsure",
+      "name": "Острое заболевание ЖКТ (гастроэнтерит)",
+      "description": "Сочетание диареи и/или рвоты — типичная картина острых ЖКТ-расстройств. В отчёте PetSure Pet Health Monitor 2024 заболевания ЖКТ названы одной из главных причин обращений у собак и кошек; у молодых животных часты подбор предметов, смена корма и стресс.",
+      "danger_level": "yellow",
+      "breed_modifiers": {
+        "cavoodle": 1.23,
+        "кавудл": 1.23,
+        "dachshund": 0.86,
+        "такса": 0.86,
+        "golden retriever": 1.29,
+        "золотист": 1.29,
+        "retriever": 1.29,
+        "labrador": 0.96,
+        "лабрадор": 0.96,
+        "french bulldog": 1.24,
+        "француз": 1.24,
+        "булдог": 1.24,
+        "groodle": 1.06,
+        "гудл": 1.06,
+        "border collie": 0.83,
+        "бордер": 0.83,
+        "колли": 0.83,
+        "staffordshire": 0.89,
+        "стаффорд": 0.89,
+        "стаффи": 0.89,
+        "german shepherd": 0.79,
+        "немец": 0.79,
+        "овчарка": 0.79
+      },
+      "symptom_rules": [
+        {"key": "b3_diarrhea", "value": "1", "match": "min", "weight": 2.4},
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.8},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.1},
+        {"key": "b4_related", "value": ["Съел что-то на улице", "Дали новую еду"], "weight": 1.1}
+      ],
+      "recommendations": ["Вода понемногу; не кормить до консультации при сильной рвоте.", "При крови в стуле/рвоте, жаре, сильной вялости — экстренно к ветеринару.", "Смену корма проводить постепенно (рекомендации PetSure для снижения риска ЖКТ)."]
+    },
+    {
+      "id": "colitis_mucus",
+      "name": "Колит / воспаление толстой кишки (подозрение)",
+      "description": "Понос со слизью или кровью без обязательной выраженной рвоты. В обзорах PetSure для взрослых кошек отмечают колит, ВЗК и лимфому ЖКТ как дифференциальные диагнозы при хронических ЖКТ-симптомах — очный осмотр обязателен.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_diarrhea", "value": "1", "match": "min", "weight": 2.0},
+        {"key": "b3_stool_mucus", "value": "yes", "weight": 1.8},
+        {"key": "b3_stool_blood", "value": "yes", "weight": 1.6},
+        {"key": "b3_accidents", "value": "yes", "weight": 0.9}
+      ],
+      "recommendations": ["Не давать сорбенты и антибиотики без назначения врача.", "В течение 24–48 часов — визит к ветеринару с пробой кала при возможности."]
+    },
+    {
+      "id": "pancreatitis_suspect",
+      "name": "Острый панкреатит (гипотеза)",
+      "description": "Сильная рвота, отказ от еды после жирной пищи или смены рациона, вялость. Соответствует классическому анамнезу; подтверждается только анализами и УЗИ.",
+      "danger_level": "red",
+      "symptom_rules": [
+        {"key": "b3_vomit", "value": "2", "match": "min", "weight": 1.8},
+        {"key": "b3_appetite_refusal", "value": "2", "match": "min", "weight": 1.6},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b4_related", "value": "Дали новую еду", "weight": 1.0}
+      ],
+      "recommendations": ["Не кормить и не поить насильно.", "Срочно к ветеринару: возможны обезвоживание и болевой синдром, нужна стационарная поддержка."]
+    },
+    {
+      "id": "arthritis_degenerative_petsure",
+      "name": "Дегенеративные изменения суставов / артрит",
+      "description": "Хромота и скованность у пожилых собак и кошек. PetSure (Pet Health Monitor 2024) указывает артрит среди трёх наиболее частых проблем у собак старшего возраста; износ суставов усиливается с возрастом.",
+      "danger_level": "yellow",
+      "breed_modifiers": {
+        "golden retriever": 1.25,
+        "золотист": 1.25,
+        "retriever": 1.25,
+        "labrador": 1.6,
+        "лабрадор": 1.6,
+        "staffordshire": 1.3,
+        "стаффорд": 1.3,
+        "стаффи": 1.3,
+        "german shepherd": 1.5,
+        "немец": 1.5,
+        "овчарка": 1.5
+      },
+      "symptom_rules": [
+        {"key": "b3_limping", "value": "1", "match": "min", "weight": 1.6},
+        {"key": "b3_stiff", "value": "1", "match": "min", "weight": 1.5},
+        {"key": "b3_hard_stand", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b1_age", "value": ["Пожилой (7-10 лет)", "Старческий (10+ лет)"], "weight": 1.4}
+      ],
+      "recommendations": ["Ограничить прыжки и длинные лестницы до осмотра.", "Ветеринар подберёт обезболивание и контроль веса; не давать человеческие НПВС."]
+    },
+    {
+      "id": "skin_infection_petsure",
+      "name": "Пиодермия / вторичная кожная инфекция",
+      "description": "Гнойнички, расчёсы, корочки на фоне зуда. PetSure относит кожные инфекции и аллергии к числу самых частых причин страховых случаев у собак и кошек (Pet Health Monitor).",
+      "danger_level": "yellow",
+      "breed_modifiers": {
+        "cavoodle": 0.73,
+        "кавудл": 0.73,
+        "dachshund": 0.66,
+        "такса": 0.66,
+        "golden retriever": 1.02,
+        "золотист": 1.02,
+        "retriever": 1.02,
+        "labrador": 0.98,
+        "лабрадор": 0.98,
+        "french bulldog": 1.82,
+        "француз": 1.82,
+        "булдог": 1.82,
+        "groodle": 0.98,
+        "гудл": 0.98,
+        "border collie": 0.49,
+        "бордер": 0.49,
+        "колли": 0.49,
+        "staffordshire": 1.57,
+        "стаффорд": 1.57,
+        "стаффи": 1.57,
+        "german shepherd": 1.1,
+        "немец": 1.1,
+        "овчарка": 1.1
+      },
+      "symptom_rules": [
+        {"key": "b3_wounds", "value": "yes", "weight": 1.7},
+        {"key": "b3_itch", "value": "yes", "weight": 1.5},
+        {"key": "b3_redness", "value": "yes", "weight": 1.3},
+        {"key": "b3_dandruff", "value": "yes", "weight": 1.0},
+        {"key": "b3_hair_loss", "value": "yes", "weight": 1.0}
+      ],
+      "recommendations": ["Не обрабатывать спиртом и не снимать корочки силой.", "Нужен осмотр: могут потребоваться мазь, антибиотик или поиск аллергена."]
+    },
+    {
+      "id": "trauma_general_petsure",
+      "name": "Травматическое повреждение (после удара, падения, укуса)",
+      "description": "По данным PetSure, травматические повреждения входят в топ причин обращений у кошек (дорожные травмы, укусы, падения). Сочетание анамнеза травмы и болевого поведения требует очного осмотра.",
+      "danger_level": "red",
+      "symptom_rules": [
+        {"key": "b4_related", "value": "Была травма (падение, удар)", "weight": 2.0},
+        {"key": "b3_has_wound", "value": "yes", "weight": 1.6},
+        {"key": "b3_limping", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_whining", "value": "1", "match": "min", "weight": 1.0}
+      ],
+      "recommendations": ["Обеспечить покой, при открытой ране — чистая повязка.", "При сильной боли, кровотечении или затруднённом дыхании — немедленно в клинику."]
+    },
+    {
+      "id": "eye_condition_severe",
+      "name": "Заболевание глаз (требует срочной оценки)",
+      "description": "Мутность, выраженное покраснение и выделения. У кошек заболевания глаз входят в топ причин обращений по данным Pet Health Monitor; многие процессы быстро прогрессируют.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_eyes_cloudy", "value": "yes", "weight": 1.9},
+        {"key": "b3_eyes_red", "value": "yes", "weight": 1.5},
+        {"key": "b3_eyes_discharge", "value": "yes", "weight": 1.4},
+        {"key": "b3_third_eyelid", "value": "yes", "weight": 1.2}
+      ],
+      "recommendations": ["Не использовать капли «от человека».", "Запись к ветеринару в ближайшие часы; при внезапной слепоте или сильном отёке — экстренно."]
+    },
+    {
+      "id": "cardiac_respiratory_pattern",
+      "name": "Сердечно-лёгочная симптоматика (гипотеза)",
+      "description": "Кашель в сочетании с одышкой и вялостью может соответствовать сердечной недостаточности, бронхите или другим причинам. PetSure отмечает значительные расходы на лечение сердечных заболеваний у питомцев — ранняя диагностика важна.",
+      "danger_level": "red",
+      "breed_modifiers": {
+        "cavoodle": 2.0,
+        "кавудл": 2.0
+      },
+      "symptom_rules": [
+        {"key": "b3_cough", "value": "1", "match": "min", "weight": 1.6},
+        {"key": "b3_shortness", "value": "1", "match": "min", "weight": 1.7},
+        {"key": "b3_breathing_hard", "value": "1", "match": "min", "weight": 1.5},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.0},
+        {"key": "b1_chronic", "value": "Болезни сердца", "weight": 1.8}
+      ],
+      "recommendations": ["Минимизировать стресс и нагрузку до осмотра.", "Срочная или неотложная консультация ветеринара; могут понадобиться рентген и УЗИ сердца."]
+    },
+    {
+      "id": "constipation_severe",
+      "name": "Запор / задержка дефекации",
+      "description": "Длительное отсутствие нормального стула, натуживание, вялость. Требует исключения обструкции и обезвоживания.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_constipation", "value": "1", "match": "min", "weight": 2.2},
+        {"key": "b3_hard_lie", "value": "1", "match": "min", "weight": 1.0},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 0.9}
+      ],
+      "recommendations": ["Не давать слабительные без назначения.", "При отсутствии стула более суток у кошки или выраженной боли — срочно к ветеринару."]
+    },
+    {
+      "id": "dehydration_risk",
+      "name": "Риск обезвоживания",
+      "description": "Снижение питья или отказ от воды на фоне вялости, рвоты или диареи. PetSure в материалах по пожилым питомцам подчёркивает важность контроля водного баланса.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_no_water", "value": "yes", "weight": 1.8},
+        {"key": "b3_drink_less", "value": "1", "match": "min", "weight": 1.4},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.0}
+      ],
+      "recommendations": ["Предложить воду понемногу, комнатной температуры.", "При полном отказе от воды более 12 часов или выраженной вялости — к ветеринару (возможна инфузионная терапия)."]
+    },
+    {
+      "id": "self_medication_complication",
+      "name": "Осложнение после самолечения",
+      "description": "Рвота или вялость после приёма лекарств или добавок без контроля врача. Многие препараты для людей токсичны для собак и кошек.",
+      "danger_level": "red",
+      "symptom_rules": [
+        {"key": "b4_self_medication", "value": "Да", "weight": 2.0},
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.3},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.2}
+      ],
+      "recommendations": ["Уточните врачу название и дозу препарата.", "При подозрении на отравление — немедленно в клинику с упаковкой препарата."]
+    },
+    {
+      "id": "hepatobiliary_hint",
+      "name": "Поражение печени / желчных путей (гипотеза)",
+      "description": "Желтовато-зелёный стул или рвота на фоне вялости могут указывать на гепатобилиарную патологию; диагноз только по анализам.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_stool_yellow_green", "value": "yes", "weight": 2.0},
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.0},
+        {"key": "b1_chronic", "value": "Болезни печени", "weight": 1.6}
+      ],
+      "recommendations": ["Не кормить жирным.", "Срочная запись к ветеринару: биохимия, УЗИ брюшной полости."]
+    },
+    {
+      "id": "cushing_like_pattern",
+      "name": "Эндокринный синдром (гиперкортицизм / аналоги, гипотеза)",
+      "description": "Жажда, частое мочеиспускание, повышенный аппетит и изменения кожи/шерсти — типичный, но не единственный паттерн гиперкортицизма; подтверждается тестами.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_drink_more", "value": "1", "match": "min", "weight": 1.5},
+        {"key": "b3_urinate_more", "value": "yes", "weight": 1.5},
+        {"key": "b3_appetite_more", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_hair_loss", "value": "yes", "weight": 1.0},
+        {"key": "b3_itch", "value": "yes", "weight": 0.8}
+      ],
+      "recommendations": ["Не ограничивать воду резко.", "Плановый визит к ветеринару: скрининг эндокринных заболеваний."]
+    },
+    {
+      "id": "neoplasia_senior_petsure",
+      "name": "Опухолевое заболевание (гипотеза у пожилого питомца)",
+      "description": "Узлы, уплотнения, вялость и снижение аппетита у пожилых животных. PetSure отмечает онкологию среди ведущих проблем у старших собак; ранняя биопсия/цитология важна.",
+      "danger_level": "red",
+      "symptom_rules": [
+        {"key": "b3_lumps", "value": "yes", "weight": 2.0},
+        {"key": "b1_age", "value": ["Пожилой (7-10 лет)", "Старческий (10+ лет)"], "weight": 1.5},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_appetite_less", "value": "1", "match": "min", "weight": 1.0}
+      ],
+      "recommendations": ["Не пытаться вскрывать или удалять образование самостоятельно.", "Запись к ветеринару: пальпация, УЗИ/рентген, при необходимости — цитология."]
+    },
+    {
+      "id": "upper_respiratory_complex",
+      "name": "Верхние дыхательные пути (выраженный катаральный синдром)",
+      "description": "Чихание, выделения из носа и глаз — инфекционный или аллергический комплекс; при одышке переходит в красную зону.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_sneeze", "value": "2", "match": "min", "weight": 1.5},
+        {"key": "b3_nose_discharge", "value": "yes", "weight": 1.5},
+        {"key": "b3_eyes_discharge", "value": "yes", "weight": 1.3},
+        {"key": "b3_cough", "value": "1", "match": "min", "weight": 0.9}
+      ],
+      "recommendations": ["Изоляция от других питомцев при подозрении на инфекцию.", "Визит к ветеринару при лихорадке (если измеряли), гное или одышке."]
+    },
+    {
+      "id": "young_pet_gi_petsure",
+      "name": "ЖКТ-расстройство у молодого питомца",
+      "description": "Рвота или понос у щенка/котёнка чаще связаны с подбором, паразитами и стрессом; иммунитет ещё формируется (Pet Health Monitor 2024).",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b1_age", "value": "Щенок/котенок (до 1 года)", "weight": 1.8},
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.4},
+        {"key": "b3_diarrhea", "value": "1", "match": "min", "weight": 1.4},
+        {"key": "b2_behavior", "value": "Любит подбирать с земли", "weight": 1.0}
+      ],
+      "recommendations": ["Не откладывать визит при вялости, крови или отказе от корма.", "Проверка на паразитов и инфекции — по назначению ветеринара."]
+    },
+    {
+      "id": "bloat_gdv_suspect",
+      "name": "Расширение желудка / переворот (ГДВ) — гипотеза у крупной собаки",
+      "description": "Тревога, непродуктивная рвота, вздутие живота, вялость у крупной собаки — экстренная ситуация до подтверждения УЗИ/рентгеном.",
+      "danger_level": "red",
+      "symptom_rules": [
+        {"key": "b1_weight", "value": ["Крупный (25-45 кг)", "Очень крупный (45+ кг)"], "weight": 1.6},
+        {"key": "b3_anxiety", "value": "2", "match": "min", "weight": 1.4},
+        {"key": "b3_vomit", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_hard_stand", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_lethargy", "value": "1", "match": "min", "weight": 1.0}
+      ],
+      "recommendations": ["Немедленно в круглосуточную клинику; в пути не кормить и не поить активно.", "Не пытаться «вылечить дома» — ГДВ требует хирургии."]
+    },
+    {
+      "id": "ivdd_spinal_issue_petsure",
+      "name": "Спинальная проблема / IVDD (гипотеза, по паттерну симптомов)",
+      "description": "Трудно вставать/ложиться, шаткая походка, тремор лап, боль при движении. Для такс и (по PetSure) французских бульдогов это чаще связано с предрасположенностью к проблемам межпозвоночных дисков.",
+      "danger_level": "red",
+      "breed_modifiers": {
+        "dachshund": 4.7,
+        "такса": 4.7,
+        "french bulldog": 5.0,
+        "француз": 5.0,
+        "булдог": 5.0
+      },
+      "symptom_rules": [
+        {"key": "b3_hard_stand", "value": "1", "match": "min", "weight": 2.2},
+        {"key": "b3_hard_lie", "value": "1", "match": "min", "weight": 2.0},
+        {"key": "b3_wobbly", "value": "1", "match": "min", "weight": 1.4},
+        {"key": "b3_limping", "value": "1", "match": "min", "weight": 1.2},
+        {"key": "b3_trembling", "value": "1", "match": "min", "weight": 0.9}
+      ],
+      "recommendations": ["Срочно на осмотр: при подозрении на IVDD требуется оценка невролога/ортопеда и диагностика.", "До визита ограничить движение и исключить прыжки/лестницы."]
+    },
+    {
+      "id": "boas_brachycephalic_petsure",
+      "name": "Брахицефалический синдром дыхательных путей (BOAS) — гипотеза",
+      "description": "Если у собаки с укороченной мордой есть выраженные признаки затруднённого дыхания, это может соответствовать BOAS. PetSure указывает очень высокий риск BOAS у французских бульдогов.",
+      "danger_level": "red",
+      "breed_modifiers": {
+        "french bulldog": 17.0,
+        "француз": 17.0,
+        "булдог": 17.0
+      },
+      "symptom_rules": [
+        {"key": "b3_breathing_hard", "value": "1", "match": "min", "weight": 2.4},
+        {"key": "b3_shortness", "value": "1", "match": "min", "weight": 1.9},
+        {"key": "b3_wheezing", "value": "1", "match": "min", "weight": 1.5},
+        {"key": "b3_cough", "value": "1", "match": "min", "weight": 0.9}
+      ],
+      "recommendations": ["Срочно ограничить нагрузку, обеспечить прохладный воздух и немедленно обратиться в клинику.", "Не давать успокоительные/человеческие препараты без назначения врача."]
+    },
+    {
+      "id": "skin_masses_petsure",
+      "name": "Кожные образования / подозрение на опухоль (гипотеза)",
+      "description": "По данным PetSure, «Skin masses» входят в топ причин обращений у собак. Важно: уплотнения могут быть как доброкачественными, так и требующими срочной диагностики. Подтверждается осмотром, цитологией/биопсией.",
+      "danger_level": "yellow",
+      "symptom_rules": [
+        {"key": "b3_lumps", "value": "yes", "weight": 2.2},
+        {"key": "b3_redness", "value": "yes", "weight": 0.9},
+        {"key": "b3_wounds", "value": "yes", "weight": 0.8},
+        {"key": "b3_hair_loss", "value": "yes", "weight": 0.6},
+        {"key": "b3_appetite_less", "value": "1", "match": "min", "weight": 0.5}
+      ],
+      "recommendations": ["Запишитесь к ветеринару для пальпации и определения типа образования.", "Не вскрывайте и не обрабатывайте агрессивными средствами без осмотра."]
     },
     {
       "id": "observation",
