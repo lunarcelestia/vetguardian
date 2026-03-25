@@ -1866,12 +1866,12 @@ body::before {
     padding: 10px 0.5rem 14px 1rem;
     justify-content: flex-start;
     /* Ограничиваем ширину слоя текста, чтобы правая часть баннера с собакой не перекрывалась */
-    max-width: 46%;
+    max-width: 56%;
     gap: 0;
   }
   /* На телефонах дополнительно фиксируем высоту, чтобы кнопка была видна */
   .hero-banner {
-    min-height: 420px;
+    min-height: 380px;
   }
   .hero-banner-img {
     position: absolute;
@@ -1883,23 +1883,23 @@ body::before {
     z-index: 0;
   }
   .hero-actions {
-    margin-top: 0.85rem;
+    margin-top: 1rem;
   }
   .hero-banner-title {
-    font-size: 1.45rem;
+    font-size: 1.7rem;
     line-height: 1.05;
   }
   .hero-banner-subtitle {
-    font-size: 0.8rem;
-    margin-top: 0.55rem;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
   }
   .hero-actions .btn-start {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     text-align: center;
-    padding: 9px 16px;
-    font-size: 0.95rem;
+    padding: 11px 18px;
+    font-size: 1rem;
   }
   /* На узких экранах: каждая кнопка и её панель в одной колонке, панель прямо под кнопкой */
   .pet-info-item {
@@ -1923,18 +1923,18 @@ body::before {
     box-sizing: border-box;
   }
   .pet-info-card {
-    flex: 0 0 100%;
+    flex: 1 1 48%;
     min-width: 0;
-    max-width: 260px;
+    max-width: 48%;
   }
   .pet-info-card img {
-    width: 72px;
-    height: 72px;
+    width: 92px;
+    height: 92px;
   }
   .pet-info-card-label {
-    font-size: 0.7rem;
-    padding: 4px 8px;
-    margin-top: 4px;
+    font-size: 0.92rem;
+    padding: 6px 12px;
+    margin-top: 6px;
   }
   .selector-select {
     font-size: 0.9rem;
@@ -2302,13 +2302,13 @@ body::before {
   }
 
   .quick-check-right {
-    padding: 10px;
+    padding: 8px;
   }
   .quick-check-qtext {
     font-size: 1rem;
   }
   .quick-check-left {
-    flex: 0 0 175px;
+    flex: 0 0 165px;
   }
   .quick-check-actions {
     gap: 8px;
@@ -2326,18 +2326,18 @@ body::before {
     flex-direction: row;
   }
   .quick-check-swap {
-    min-height: 330px;
-    max-height: none;
+    min-height: 310px;
+    max-height: 310px;
   }
   .quick-check-chart-wrap canvas {
-    height: 220px !important;
+    height: 200px !important;
   }
   .quick-check-loading {
-    min-height: 330px;
-    max-height: none;
+    min-height: 310px;
+    max-height: 310px;
   }
   .quick-check-result {
-    min-height: 330px;
-    max-height: none;
+    min-height: 310px;
+    max-height: 310px;
   }
 }
