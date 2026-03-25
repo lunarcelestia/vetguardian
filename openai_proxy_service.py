@@ -33,6 +33,24 @@ VETGUARDIAN_URGENCY: red
 Не ставь окончательный диагноз. Пиши профессионально, но понятно владельцу."""
 
 
+QUICK_SYSTEM_PROMPT = """Ты — ветеринарный ассистент VetGuardian.
+
+Сгенерируй короткую справку по результатам быстрого опроса (без окончательного диагноза).
+
+Правила ответа:
+1) Самая первая строка ответа (без префиксов и без Markdown) должна быть РОВНО в формате:
+VETGUARDIAN_URGENCY: green
+или
+VETGUARDIAN_URGENCY: yellow
+или
+VETGUARDIAN_URGENCY: red
+2) Со второй строки пустая строка и затем 8-10 предложений на русском.
+3) Тон: сначала общий вывод "в целом похоже на норму/есть моменты, на которые стоит обратить внимание", затем интерпретация по ключевым ответам (аппетит, рвота/диарея, питье, активность/боль, шерсть/глаза/моча), затем 3-5 конкретных практических рекомендаций на ближайшие 24–48 часов (например: корректировка доз корма, режим воды, наблюдение за стулом/мочеиспусканием, ограничение нагрузки при скованности, уход за кожей и т.п.).
+4) В конце добавь 1 фразу-предупреждение: при ухудшении/крови/резком отказе от воды — обратитесь к ветеринару срочно.
+
+Не придумывай данные, которых нет в опросе."""
+
+
 URGENCY_LINE = re.compile(
     r"^\s*VETGUARDIAN_URGENCY:\s*(green|yellow|red)\s*(\r?\n|$)",
     re.IGNORECASE | re.MULTILINE,
@@ -189,6 +207,111 @@ def get_ai_report(
         visible, urgency = _strip_urgency_line(raw)
         if urgency is None:
             # fallback: попытка найти строку внутри текста
+            m2 = re.search(
+                r"VETGUARDIAN_URGENCY:\s*(green|yellow|red)",
+                raw,
+                re.IGNORECASE,
+            )
+            if m2:
+                urgency = m2.group(1).lower()
+                visible = URGENCY_LINE.sub("", raw, count=1).strip()
+        return {"success": True, "text": visible.strip(), "urgency_level": urgency, "error": None}
+    except requests.exceptions.Timeout:
+        return {"success": False, "text": "", "urgency_level": None, "error": "timeout"}
+    except requests.exceptions.RequestException as e:
+        err_msg = str(e)
+        if hasattr(e, "response") and e.response is not None:
+            try:
+                err_body = e.response.json()
+                err_msg = err_body.get("error", {}).get("message", err_msg) or err_msg
+            except Exception:
+                pass
+        return {"success": False, "text": "", "urgency_level": None, "error": _user_friendly_error(err_msg)}
+    except Exception as e:
+        return {"success": False, "text": "", "urgency_level": None, "error": str(e)}
+
+
+def get_quick_check_brief(
+    quick_answers: dict,
+    danger_hint: str = "",
+    overall_score=None,
+    parameters=None,
+) -> dict:
+    """
+    Короткая справка (4-6 предложений) для блока quick-check.
+    Возвращает совместимый формат как get_ai_report: {success,text,urgency_level,error}.
+    """
+    api_key = getattr(Config, "OPENAI_API_KEY", None) or ""
+    base_url = getattr(Config, "OPENAI_API_BASE", "https://openai.api.proxyapi.ru/v1") or "https://openai.api.proxyapi.ru/v1"
+    base_url = base_url.rstrip("/")
+    if not api_key:
+        return {"success": False, "text": "", "urgency_level": None, "error": "OPENAI_API_KEY not set"}
+
+    # Подготавливаем "человеческий" вид ответов.
+    answers = quick_answers or {}
+    survey_lines = []
+    for i in range(1, 11):
+        k = f"q{i}"
+        if k in answers and answers.get(k):
+            survey_lines.append(f"{i}. {answers.get(k)}")
+    survey_text = "\n".join(survey_lines) if survey_lines else "Нет данных"
+
+    # В get_ai_report предусмотрена выжимка urgency-строки из ответа.
+    user_text = "Данные быстрого опроса:\n" + survey_text
+    if danger_hint:
+        user_text += "\n\nПодсказка по опасности (если есть): " + str(danger_hint)
+
+    if overall_score is not None:
+        user_text += "\n\nИтоговая оценка (0..10): " + str(overall_score)
+
+    if parameters and isinstance(parameters, dict):
+        # Даем модели не только вопросы, но и что именно сильнее/слабее по 5 шкалам.
+        label_map = {
+            "physical_form": "Физическая форма",
+            "digestion_hydration": "Пищеварение и водный баланс",
+            "energy_mobility": "Энергия и подвижность",
+            "external_state": "Внешнее состояние",
+            "behavior_nervous": "Поведение и нервная система",
+        }
+        lines = []
+        for k, v in (parameters or {}).items():
+            if not isinstance(v, dict):
+                continue
+            score = v.get("score", None)
+            if score is None:
+                continue
+            lines.append(f"{label_map.get(k, k)}: {score}/10")
+        if lines:
+            user_text += "\n\nСводка шкал:\n" + "\n".join(lines)
+
+    url = f"{base_url}/chat/completions"
+    model = getattr(Config, "OPENAI_API_MODEL", "openai/gpt-4o-mini") or "openai/gpt-4o-mini"
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": QUICK_SYSTEM_PROMPT},
+            {"role": "user", "content": user_text},
+        ],
+        "max_tokens": 800,
+        "temperature": 0.25,
+    }
+
+    try:
+        r = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=90,
+        )
+        r.raise_for_status()
+        data = r.json()
+        raw = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
+        raw = raw.strip()
+        visible, urgency = _strip_urgency_line(raw)
+        if urgency is None:
             m2 = re.search(
                 r"VETGUARDIAN_URGENCY:\s*(green|yellow|red)",
                 raw,
