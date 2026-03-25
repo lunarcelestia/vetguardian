@@ -1505,6 +1505,13 @@
     var ctx = document.getElementById(canvasId);
     if (!ctx || !window.Chart) return null;
 
+    var isPhoneCharts = false;
+    try {
+      isPhoneCharts = window.matchMedia && window.matchMedia("(max-width: 480px)").matches;
+    } catch (e) {
+      isPhoneCharts = window.innerWidth <= 480;
+    }
+
     // перед новой отрисовкой запускаем CSS-анимацию блока-графика
     animateChartBlock(canvasId);
 
@@ -1577,7 +1584,9 @@
         indexAxis: "y",
         maintainAspectRatio: false,
         layout: {
-          padding: { left: 10, right: 18, top: 10, bottom: 10 }
+          // На телефонах слева часто не хватает места под длинные названия систем.
+          // Увеличиваем padding, чтобы не было обрезания tick-label'ов.
+          padding: { left: isPhoneCharts ? 28 : 10, right: 18, top: 10, bottom: 10 }
         },
         animation: {
           duration: 1200,
@@ -1602,7 +1611,7 @@
             grid: { display: false },
             ticks: {
               color: "#0f172a",
-              font: { family: fontFamily, size: 11, weight: "600" },
+              font: { family: fontFamily, size: isPhoneCharts ? 10 : 11, weight: "600" },
               callback: function (value) {
                 return value + "%";
               }
@@ -1613,7 +1622,7 @@
             ticks: {
               display: true,
               color: "#0f172a",
-              font: { family: fontFamily, size: 11, weight: "600" }
+              font: { family: fontFamily, size: isPhoneCharts ? 10 : 11, weight: "600" }
             }
           }
         }
@@ -1627,7 +1636,8 @@
           ctx.save();
           ctx.fillStyle = "#6b7280";
           var fontFamilyStr = fontFamily;
-          var baseFont = "600 16px " + fontFamilyStr;
+          var labelFontSize = isPhoneCharts ? 13 : 16;
+          var baseFont = "600 " + labelFontSize + "px " + fontFamilyStr;
 
           meta.data.forEach(function (bar, index) {
             var value = dataset.data[index];
@@ -1635,7 +1645,7 @@
             ctx.font = baseFont;
             if (typeof value === "number") {
               ctx.textAlign = "right";
-              ctx.fillText(Math.round(value) + "%", bar.x - 8, y);
+              ctx.fillText(Math.round(value) + "%", bar.x - (isPhoneCharts ? 5 : 8), y);
             }
           });
           ctx.restore();
