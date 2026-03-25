@@ -1507,9 +1507,13 @@
 
     var isPhoneCharts = false;
     try {
-      isPhoneCharts = window.matchMedia && window.matchMedia("(max-width: 480px)").matches;
+      // На некоторых эмуляторах iPhone SE2 ширина CSS-пикселей может быть > 480px,
+      // но высота при этом "телефонная". Делаем правило шире, чем просто max-width 480.
+      isPhoneCharts =
+        (window.matchMedia && window.matchMedia("(max-width: 480px)").matches) ||
+        (window.matchMedia && window.matchMedia("(max-width: 768px) and (min-height: 700px) and (orientation: portrait)").matches);
     } catch (e) {
-      isPhoneCharts = window.innerWidth <= 480;
+      isPhoneCharts = (window.innerWidth <= 480) || (window.innerWidth <= 768 && window.innerHeight >= 700);
     }
 
     // перед новой отрисовкой запускаем CSS-анимацию блока-графика
