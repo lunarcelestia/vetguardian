@@ -39,6 +39,10 @@
     var petSection = document.getElementById("petInfoSection");
     if (petSection) petSection.scrollIntoView({ behavior: "smooth" });
   });
+  if (document.getElementById("navQuickCheck")) document.getElementById("navQuickCheck").addEventListener("click", function () {
+    var quickSection = document.getElementById("quickCheckSection");
+    if (quickSection) quickSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   // ——— Мобильное меню: выдвижная панель справа ———
   var mobileMenuBtn = document.getElementById("mobileMenuBtn");
@@ -61,6 +65,9 @@
       else if (action === "breeds") {
         var petSection = document.getElementById("petInfoSection");
         if (petSection) petSection.scrollIntoView({ behavior: "smooth" });
+      } else if (action === "quick-check") {
+        var quickSection = document.getElementById("quickCheckSection");
+        if (quickSection) quickSection.scrollIntoView({ behavior: "smooth", block: "start" });
       } else if (action === "cabinet") showCabinet();
       closeMobileNav();
     });
@@ -2145,4 +2152,324 @@
       if (behaviorListView) behaviorListView.style.display = "block";
     });
   }
+
+  // ——— Быстрый опрос: Проверь питомца ———
+  (function () {
+    var quickSection = document.getElementById("quickCheckSection");
+    if (!quickSection) return;
+
+    var QUICK_QUESTIONS = [
+      {
+        key: "q1",
+        text: "1. Какой вес у вашей собаки относительно нормы для ее породы, возраста и телосложения?",
+        options: [
+          "Вес в идеальном диапазоне (видны талия, ребра прощупываются без усилий)",
+          "Небольшие отклонения: ребра прощупываются с легким трудом, талия чуть слабее нормы",
+          "Умеренное отклонение: ребра прощупываются с трудом, талия выражена слабо",
+          "Критично: ребра не прощупываются / или сильно выражены ребра и кости таза (истощение)",
+        ],
+      },
+      {
+        key: "q2",
+        text: "2. Как изменился аппетит за последние 2–3 недели?",
+        options: [
+          "Без изменений, ест стабильно (как обычно)",
+          "Аппетит немного снизился: ест меньше, но в целом порцию съедает",
+          "Аппетит заметно усилен: просит еду чаще/быстрее съедает",
+          "Отказ от еды более суток",
+        ],
+      },
+      {
+        key: "q3",
+        text: "3. Как часто у собаки бывает рвота или диарея?",
+        options: [
+          "Редко или никогда (1–2 раза за полгода и без последствий)",
+          "Иногда (1–2 раза в месяц, проходит самостоятельно)",
+          "Чаще (примерно 1 раз в неделю, иногда требуется коррекция питания)",
+          "Регулярно/тяжело (несколько раз в неделю, требуется помощь, возможны признаки обезвоживания)",
+        ],
+      },
+      {
+        key: "q4",
+        text: "4. Оцените уровень активности и поведение в привычной обстановке",
+        options: [
+          "Активен, играет, выдерживает обычные нагрузки",
+          "Немного снизилась активность: стал меньше играть, но нагрузки переносит",
+          "Быстрее устает: заметно меньше играет, но все же двигается",
+          "Вялость/апатия: нежелание двигаться, сонливость днем",
+        ],
+      },
+      {
+        key: "q5",
+        text: "5. Как выглядит шерсть и кожа?",
+        options: [
+          "Шерсть гладкая, блестящая, без залысин, кожа чистая",
+          "Легкие изменения: немного тускнеет, есть единичная перхоть/расчесы, зуд минимальный",
+          "Умеренные проблемы: выраженная линька вне сезона, сухость/корки, периодический зуд",
+          "Серьезные признаки: проплешины, покраснения, сильный зуд, неприятный запах",
+        ],
+      },
+      {
+        key: "q6",
+        text: "6. Как собака пьет воду?",
+        options: [
+          "Пьет умеренно, привычное количество",
+          "Пьет заметно больше, чем обычно",
+          "Пьет заметно меньше, чем обычно",
+          "Пьет очень мало или отказывается от воды",
+        ],
+      },
+      {
+        key: "q7",
+        text: "7. Как часто собака мочится и нет ли изменений в мочеиспускании?",
+        options: [
+          "Без изменений, режим привычный",
+          "Стал чаще проситься/мочится чаще: но без крови и без сильного ухудшения самочувствия",
+          "Частые позывы, мало мочи (как будто не может нормально помочиться)",
+          "Кровь в моче, темная моча с резким запахом, или мочеиспускание отсутствует",
+        ],
+      },
+      {
+        key: "q8",
+        text: "8. Есть ли признаки боли или дискомфорта при движении?",
+        options: [
+          "Движется свободно, без скованности",
+          "Легкая скованность после сна/длительного отдыха, проходит через несколько минут",
+          "Становится скованнее после нагрузки, но после разминки двигается нормально",
+          "Хромота/нежелание прыгать, болезненность при прикосновении",
+        ],
+      },
+      {
+        key: "q9",
+        text: "9. В каком состоянии глаза, уши и нос?",
+        options: [
+          "Чистые, без выделений, запаха, покраснений",
+          "Легкие изменения: немного слезятся/покраснение, но без гноя",
+          "Умеренные выделения: светлые/слизистые, возможен зуд и частое трение лапой",
+          "Гнойные/обильные выделения, сильное покраснение, неприятный запах",
+        ],
+      },
+      {
+        key: "q10",
+        text: "10. Как изменилось поведение в целом за последние 2–3 недели?",
+        options: [
+          "Без изменений, характер и привычки прежние",
+          "Немного изменилось: стал тревожнее/тише, но ориентируется и реагирует",
+          "Заметные изменения: выраженная тревожность/отстраненность, резкие смены настроения",
+          "Резкие нарушения: агрессия, дезориентация, беспричинный вой/скулеж",
+        ],
+      },
+    ];
+
+    var quickSwap = document.getElementById("quickCheckSwap");
+    var qTextEl = document.getElementById("quickCheckQuestionText");
+    var optionsEl = document.getElementById("quickCheckOptions");
+    var backBtn = document.getElementById("quickCheckBackBtn");
+    var nextBtn = document.getElementById("quickCheckNextBtn");
+
+    var loadingEl = document.getElementById("quickCheckLoading");
+    var resultEl = document.getElementById("quickCheckResult");
+    var aiTextEl = document.getElementById("quickCheckAiText");
+    var chartCanvas = document.getElementById("quickCheckRadarChart");
+
+    if (!quickSwap || !qTextEl || !optionsEl || !backBtn || !nextBtn || !loadingEl || !resultEl || !aiTextEl || !chartCanvas) return;
+
+    var quickIndex = 0;
+    var quickAnswers = {};
+    var quickChart = null;
+
+    function setBackDisabled(disabled) {
+      backBtn.disabled = !!disabled;
+      // По вашему ТЗ кнопка "Назад" появляется со 2 вопроса.
+      backBtn.style.display = disabled ? "none" : "inline-flex";
+    }
+
+    function renderQuestion(i) {
+      var q = QUICK_QUESTIONS[i];
+      if (!q) return;
+
+      qTextEl.textContent = q.text;
+      optionsEl.innerHTML = "";
+
+      q.options.forEach(function (optText, optIdx) {
+        var id = "quick_" + q.key + "_" + optIdx;
+        var label = document.createElement("label");
+        label.className = "quick-check-option";
+
+        var input = document.createElement("input");
+        input.type = "radio";
+        input.name = "quickCheckOption_" + q.key;
+        input.id = id;
+        input.value = optText;
+
+        var dot = document.createElement("span");
+        dot.className = "quick-check-dot";
+
+        var optSpan = document.createElement("span");
+        optSpan.className = "quick-check-option-text";
+        optSpan.textContent = optText;
+
+        // Порядок: input + dot + текст (для CSS input:checked + .dot)
+        label.appendChild(input);
+        label.appendChild(dot);
+        label.appendChild(optSpan);
+
+        input.addEventListener("change", function () {
+          quickAnswers[q.key] = optText;
+        });
+
+        if (quickAnswers[q.key] === optText) {
+          input.checked = true;
+        }
+        optionsEl.appendChild(label);
+      });
+    }
+
+    // На старте
+    setBackDisabled(quickIndex === 0);
+    renderQuestion(quickIndex);
+
+    function animateToQuestion(newIndex, dir) {
+      // dir: "next" | "back"
+      if (newIndex < 0 || newIndex > QUICK_QUESTIONS.length - 1) return;
+
+      // Снимаем вход/выход, чтобы повторные клики не накапливали классы
+      quickSwap.classList.remove("quick-check-swipe-out-next", "quick-check-swipe-out-back", "quick-check-swipe-in");
+
+      if (dir === "next") quickSwap.classList.add("quick-check-swipe-out-next");
+      else quickSwap.classList.add("quick-check-swipe-out-back");
+
+      setTimeout(function () {
+        quickIndex = newIndex;
+        setBackDisabled(quickIndex === 0);
+        renderQuestion(quickIndex);
+
+        // Появляем новый контент "своим" направлением
+        quickSwap.classList.remove("quick-check-swipe-out-next", "quick-check-swipe-out-back");
+        quickSwap.classList.add("quick-check-swipe-in");
+
+        setTimeout(function () {
+          quickSwap.classList.remove("quick-check-swipe-in");
+        }, 25);
+      }, 190);
+    }
+
+    function validateCurrent() {
+      var q = QUICK_QUESTIONS[quickIndex];
+      return !!(q && quickAnswers[q.key]);
+    }
+
+    function showLoading() {
+      quickSwap.style.display = "none";
+      loadingEl.style.display = "flex";
+      resultEl.style.display = "none";
+    }
+
+    function showResult() {
+      quickSwap.style.display = "none";
+      loadingEl.style.display = "none";
+      resultEl.style.display = "flex";
+    }
+
+    function escapeNewlinesToBr(s) {
+      return String(s || "").replace(/\n/g, "<br>");
+    }
+
+    function renderRadarChart(chartData) {
+      if (!chartData || !chartCanvas) return;
+      var labels = chartData.labels || [];
+      var values = chartData.values || [];
+      if (!labels.length || !values.length) return;
+
+      if (quickChart && typeof quickChart.destroy === "function") {
+        quickChart.destroy();
+        quickChart = null;
+      }
+
+      var fontFamily = '"TT Days Sans", "Segoe UI", sans-serif';
+
+      var ctx = chartCanvas.getContext("2d");
+      quickChart = new window.Chart(ctx, {
+        type: "radar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Оценка здоровья",
+              data: values,
+              backgroundColor: "rgba(14, 165, 233, 0.15)",
+              borderColor: "rgba(14, 165, 233, 0.9)",
+              pointBackgroundColor: "rgba(14, 165, 233, 0.95)",
+              pointBorderColor: "rgba(255,255,255,0.95)",
+              pointRadius: 4,
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true },
+          },
+          scales: {
+            r: {
+              min: 0,
+              max: 10,
+              ticks: {
+                stepSize: 2,
+                color: "#64748b",
+                font: { family: fontFamily, size: 12, weight: "600" },
+              },
+              grid: { color: "rgba(100,116,139,0.25)" },
+              angleLines: { color: "rgba(100,116,139,0.25)" },
+              pointLabels: { font: { family: fontFamily, size: 12, weight: "700" } },
+            },
+          },
+        },
+      });
+    }
+
+    function submitQuickCheck() {
+      showLoading();
+      fetch(API + "/quick-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: quickAnswers }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (!res || !res.ok) throw new Error((res && res.error) || "Ошибка");
+          var aiText = res.ai_text || "";
+          aiTextEl.innerHTML = aiText ? escapeNewlinesToBr(aiText) : "По итогам опроса стоит обратить внимание на указанные параметры.";
+          renderRadarChart(res.chart || {});
+          showResult();
+        })
+        .catch(function () {
+          aiTextEl.innerHTML = "Не удалось получить результат из Llama прямо сейчас. Попробуйте ещё раз позже.";
+          // Пытаемся всё равно нарисовать по fallback-данным, если они пришли частично.
+          showResult();
+        });
+    }
+
+    backBtn.addEventListener("click", function () {
+      if (quickIndex <= 0) return;
+      animateToQuestion(quickIndex - 1, "back");
+    });
+
+    nextBtn.addEventListener("click", function () {
+      if (!validateCurrent()) {
+        alert("Выберите вариант ответа для вопроса " + (quickIndex + 1) + ".");
+        return;
+      }
+
+      if (quickIndex < QUICK_QUESTIONS.length - 1) {
+        animateToQuestion(quickIndex + 1, "next");
+        return;
+      }
+      // Последний вопрос -> отправка
+      submitQuickCheck();
+    });
+  })();
 })();
