@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
   <link rel="stylesheet" href="/css/style.css?v=3">
-  <link rel="stylesheet" href="/css/design.css?v=3">
+  <link rel="stylesheet" href="/css/design.css?v=4">
+  <link rel="icon" type="image/png" href="/pictures/logo%20mini.png">
+  <link rel="apple-touch-icon" type="image/png" href="/pictures/logo%20mini.png">
     <!-- Chart.js для интерактивных графиков -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -21,6 +23,7 @@
       <button type="button" class="nav-btn" id="navAnalysis">Обследование</button>
       <button type="button" class="nav-btn" id="navClinics">Ветклиники</button>
       <button type="button" class="nav-btn" id="navBreeds">О собаках</button>
+      <button type="button" class="nav-btn" id="navQuickCheck">Проверь питомца</button>
       <button type="button" class="nav-btn nav-cabinet" id="navCabinet" aria-label="Личный кабинет">
         <img src="https://s.fotora.ru/fe35920ab59db595.png" alt="Личный кабинет">
       </button>
@@ -38,6 +41,7 @@
       <button type="button" class="mobile-nav-link" data-action="analysis">Обследование</button>
       <button type="button" class="mobile-nav-link" data-action="clinics">Ветклиники</button>
       <button type="button" class="mobile-nav-link" data-action="breeds">Узнать питомца лучше</button>
+        <button type="button" class="mobile-nav-link" data-action="quick-check">Проверь питомца</button>
       <button type="button" class="mobile-nav-link" data-action="cabinet">Личный кабинет</button>
     </nav>
   </div>
@@ -221,6 +225,52 @@
               </div>
             </div>
             <div class="behavior-article-sections" id="behaviorArticleText"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Быстрый опрос состояния питомца -->
+    <section class="quick-check-section" id="quickCheckSection">
+      <div class="quick-check-header">
+        <h2 class="quick-check-title">
+          ПРОЙДИТЕ ТЕСТ И ПОЛУЧИТЕ ОЦЕНКУ ЗДОРОВЬЯ ВАШЕГО ПИТОМЦА
+        </h2>
+        <div class="quick-check-sub">
+          <div class="quick-check-sub-line"></div>
+          <div class="quick-check-sub-text">
+            Думаете, все ли хорошо с вашей собакой?<br>
+            Пройдите тест и узнайте, на что обратить вам внимание у вашего питомца.
+          </div>
+        </div>
+      </div>
+      <div class="quick-check-inner">
+        <div class="quick-check-card">
+          <div class="quick-check-left">
+            <!-- Изображение намеренно обрезано: фиксируем левый-нижний якорь -->
+            <img class="quick-check-img" src="/pictures/test_riki.png" alt="Быстрый опрос">
+          </div>
+          <div class="quick-check-right">
+            <div class="quick-check-swap" id="quickCheckSwap">
+              <div class="quick-check-qtext" id="quickCheckQuestionText"></div>
+              <div class="quick-check-options" id="quickCheckOptions" role="radiogroup" aria-label="Варианты ответа"></div>
+              <div class="quick-check-actions">
+                <button type="button" class="quick-check-btn quick-check-back" id="quickCheckBackBtn" aria-label="Назад">Назад</button>
+                <button type="button" class="quick-check-btn quick-check-next" id="quickCheckNextBtn" aria-label="Далее">Далее</button>
+              </div>
+            </div>
+
+            <div class="quick-check-loading" id="quickCheckLoading" style="display:none;">
+              <div class="quick-check-spinner"></div>
+              <p>Считаем оценку...</p>
+            </div>
+
+            <div class="quick-check-result" id="quickCheckResult" style="display:none;">
+              <div class="quick-check-ai-brief" id="quickCheckAiText"></div>
+              <div class="quick-check-chart-wrap">
+                <canvas id="quickCheckRadarChart"></canvas>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -602,6 +652,7 @@
           <!-- Результат в панели -->
           <div class="anamnesis-result" id="stepResult" style="display:none;">
             <div class="result-level" id="resultLevel"></div>
+            <p class="result-medical-disclaimer" role="note">Внимание! Информация в этой статье предназначена только для общего понимания вопросов здоровья и не может служить заменой ветеринарной консультации. Не пытайтесь ставить питомцу диагноз или подбирать лечение на основании прочитанного. Только врач может оценить ваше состояние, учесть индивидуальные особенности и назначить корректную терапию.</p>
             <div class="ai-report-frame" id="aiReportFrame">
               <div class="ai-report-title">Справка ИИ</div>
               <div class="ai-report-content" id="aiReportContent"></div>
