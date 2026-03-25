@@ -573,6 +573,20 @@ body::before {
 
 /* Результат в панели */
 .anamnesis-result .result-level { margin-bottom: 20px; }
+
+/* Юридико-медицинский дисклеймер над итоговой справкой */
+.result-medical-disclaimer {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #075985;
+  background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+  border: 1px solid #7dd3fc;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.12);
+}
+
 .anamnesis-result .ai-report-frame {
   border: 2px solid var(--sky-dark);
   box-shadow: 0 0 20px var(--sky-glow);
@@ -1737,6 +1751,22 @@ body::before {
     justify-content: center;
     max-width: 100%;
   }
+  /* Чтобы текст и кнопка "Начать анализ" не обрезались из-за высоты баннера */
+  .hero-banner {
+    min-height: 420px;
+  }
+  .hero-banner-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+    z-index: 0;
+  }
+  .hero-actions {
+    margin-top: 1.5rem;
+  }
   .hero-banner-title {
     font-size: 2.8rem;
   }
@@ -1833,23 +1863,43 @@ body::before {
     border-radius: 20px;
   }
   .hero-banner-inner {
-    padding: 12px 1rem 18px;
+    padding: 10px 0.5rem 14px 1rem;
     justify-content: flex-start;
-    max-width: 100%;
+    /* Ограничиваем ширину слоя текста, чтобы правая часть баннера с собакой не перекрывалась */
+    max-width: 46%;
+    gap: 0;
+  }
+  /* На телефонах дополнительно фиксируем высоту, чтобы кнопка была видна */
+  .hero-banner {
+    min-height: 420px;
+  }
+  .hero-banner-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+    z-index: 0;
+  }
+  .hero-actions {
+    margin-top: 0.85rem;
   }
   .hero-banner-title {
-    font-size: 2rem;
+    font-size: 1.45rem;
+    line-height: 1.05;
   }
   .hero-banner-subtitle {
-    font-size: 1rem;
+    font-size: 0.8rem;
+    margin-top: 0.55rem;
   }
   .hero-actions .btn-start {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     text-align: center;
-    padding: 12px 24px;
-    font-size: 1.05rem;
+    padding: 9px 16px;
+    font-size: 0.95rem;
   }
   /* На узких экранах: каждая кнопка и её панель в одной колонке, панель прямо под кнопкой */
   .pet-info-item {
@@ -1902,5 +1952,392 @@ body::before {
   .age-article-title,
   .behavior-article-title {
     font-size: 1.3rem;
+  }
+}
+
+/* --- Быстрый опрос: Проверь питомца --- */
+.quick-check-section {
+  margin-top: 3.5rem;
+  padding: 0 20px 24px;
+  scroll-margin-top: 220px;
+}
+
+.quick-check-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.quick-check-header {
+  max-width: 1200px;
+  margin: 0 auto 1.25rem;
+}
+
+.quick-check-title {
+  text-align: left;
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.quick-check-sub {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.quick-check-sub-line {
+  flex: 0 0 6px;
+  height: 100%;
+  min-height: 70px;
+  border-radius: 8px;
+  background: var(--sky-dark);
+  margin-top: 4px;
+}
+
+.quick-check-sub-text {
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.quick-check-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d1d5db; /* как у карточек пород */
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  max-width: 100%;
+}
+
+.quick-check-left {
+  flex: 0 0 280px; /* фиксируем ширину как в "идеальном" варианте */
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.quick-check-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* заполняем поле без внутренних отступов */
+  object-position: center bottom; /* чтобы не "съедать" правый край */
+  display: block;
+}
+
+.quick-check-right {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  /* В прошлый раз проблема была по вертикали (выпирало на фото).
+     По горизонтали не обрезаем, чтобы текст вопросов/ответов не срезался справа. */
+  overflow-y: hidden;
+  overflow-x: visible;
+}
+
+.quick-check-swap {
+  min-height: 420px;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  will-change: transform, opacity;
+}
+
+.quick-check-result {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  max-height: 420px;
+}
+
+.quick-check-qtext {
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.quick-check-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.quick-check-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.quick-check-option:hover {
+  transform: translateY(-1px);
+  border-color: rgba(14, 165, 233, 0.8);
+}
+
+.quick-check-option input {
+  display: none;
+}
+
+.quick-check-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 2px solid #9ca3af;
+  background: transparent;
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.quick-check-option input:checked + .quick-check-dot {
+  border-color: var(--sky-dark);
+  background: var(--sky-dark);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+}
+
+.quick-check-option-text {
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.quick-check-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.quick-check-btn {
+  padding: 14px 26px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-light);
+  background: #ffffff;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.quick-check-btn:hover {
+  transform: scale(1.02);
+  border-color: var(--sky-dark);
+}
+
+.quick-check-next {
+  border-color: transparent;
+  background: var(--sky-dark);
+  color: #fff;
+  box-shadow: 0 0 16px var(--sky-glow);
+}
+
+.quick-check-back[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.quick-check-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 420px;
+  max-height: 420px;
+}
+
+.quick-check-spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 5px solid rgba(125, 211, 252, 0.35);
+  border-top-color: var(--sky-dark);
+  animation: quickSpin 0.85s linear infinite;
+}
+
+@keyframes quickSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.quick-check-ai-brief {
+  background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+  border: 1px solid #7dd3fc;
+  border-radius: 18px;
+  padding: 14px 16px;
+  color: #075985;
+  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.08);
+  font-weight: 600;
+  margin-bottom: 16px;
+  line-height: 1.55;
+  /* Если справка длинная — не раздуваем блок, а показываем скролл */
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 175px;
+  font-size: 0.98rem;
+  /* Чтобы при длинном тексте скролл выглядел аккуратно */
+  scrollbar-gutter: stable;
+}
+
+.quick-check-chart-wrap {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 12px;
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0; /* чтобы Chart.js мог корректно вписаться при скролле справки */
+}
+
+.quick-check-chart-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  max-width: 100%;
+}
+
+.quick-check-swipe-out-next {
+  transform: translateX(-28px);
+  opacity: 0;
+}
+
+.quick-check-swipe-out-back {
+  transform: translateX(28px);
+  opacity: 0;
+}
+
+.quick-check-swipe-in {
+  transform: translateX(28px);
+  opacity: 0;
+}
+
+/* Планшеты: картинка сверху, контент ниже */
+@media (max-width: 900px) {
+  .quick-check-section {
+    padding: 0 16px 20px;
+  }
+  .quick-check-card {
+    flex-direction: row;
+    left: auto;
+    width: 100%;
+  }
+  .quick-check-left {
+    flex: 0 0 190px;
+    width: auto;
+    min-width: 0;
+  }
+  .quick-check-img {
+    height: 100%;
+  }
+  .quick-check-right {
+    padding: 14px;
+  }
+  .quick-check-swap {
+    min-height: 430px;
+    max-height: none;
+  }
+
+  .quick-check-qtext {
+    font-size: 1.15rem;
+  }
+
+  .quick-check-option-text {
+    font-size: 0.95rem;
+  }
+  .quick-check-chart-wrap canvas {
+    height: 280px !important;
+  }
+  .quick-check-loading {
+    min-height: 430px;
+    max-height: none;
+  }
+  .quick-check-result {
+    min-height: 430px;
+    max-height: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-check-header {
+    margin-bottom: 1rem;
+  }
+
+  .quick-check-title {
+    margin-bottom: 0.9rem;
+  }
+
+  .quick-check-sub {
+    gap: 14px;
+  }
+
+  .quick-check-sub-line {
+    min-height: 58px;
+  }
+
+  .quick-check-right {
+    padding: 10px;
+  }
+  .quick-check-qtext {
+    font-size: 1rem;
+  }
+  .quick-check-left {
+    flex: 0 0 175px;
+  }
+  .quick-check-actions {
+    gap: 8px;
+  }
+  .quick-check-btn {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+  .quick-check-img {
+    height: 100%;
+    object-position: left bottom;
+  }
+  .quick-check-card {
+    width: 100%;
+    flex-direction: row;
+  }
+  .quick-check-swap {
+    min-height: 330px;
+    max-height: none;
+  }
+  .quick-check-chart-wrap canvas {
+    height: 220px !important;
+  }
+  .quick-check-loading {
+    min-height: 330px;
+    max-height: none;
+  }
+  .quick-check-result {
+    min-height: 330px;
+    max-height: none;
   }
 }
