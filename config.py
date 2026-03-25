@@ -31,3 +31,8 @@ class Config:
     VET_CLINICS_PATH = BASE_DIR / "data" / "vet_clinics.json"
     YANDEX_GEOCODER_API_KEY = (os.environ.get("YANDEX_GEOCODER_API_KEY") or "2ff533a1-f8f7-4027-82d1-2fe2bac4c298").strip()
     YANDEX_MAPS_API_KEY = (os.environ.get("YANDEX_API_KEY") or "AQVN1BOz3fAvy-pqoMYYOKAPCFsYH6R_C3b0TV9I").strip()
+
+    # Llama (локальная) через Ollama HTTP API.
+    # Требования: запущенный Ollama на машине, где крутится Flask.
+    OLLAMA_BASE_URL = (os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434").strip().rstrip("/")
+    OLLAMA_MODEL = (os.environ.get("OLLAMA_MODEL") or "llama3.1:8b-instruct").strip()
