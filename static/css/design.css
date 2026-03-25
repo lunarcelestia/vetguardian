@@ -2358,3 +2358,74 @@ body::before {
     overflow-y: auto;
   }
 }
+
+/* iPhone SE2 / узкие телефоны с высокой высотой:
+   иногда ширина CSS-пикселей попадает в диапазон <=768px и не срабатывает <=480px,
+   поэтому делаем отдельный точечный адаптив по высоте */
+@media (max-width: 768px) and (min-width: 481px) and (min-height: 700px) and (orientation: portrait) {
+  /* Баннер: возвращаем пропорции ближе к десктопу, но без клиппинга текста */
+  .hero-banner {
+    min-height: 420px;
+  }
+  .hero-banner-inner {
+    padding: 10px 0.5rem 14px 1rem;
+    justify-content: center;
+    max-width: 60%;
+  }
+  .hero-banner-img {
+    object-position: right center;
+  }
+  .hero-banner-title {
+    font-size: 1.7rem;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+  .hero-banner-subtitle {
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+  }
+  .hero-actions {
+    margin-top: 0.9rem;
+  }
+  .hero-actions .btn-start {
+    width: auto;
+    padding: 11px 18px;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  /* Графики "О собаках": делаем менее вытянутыми по высоте */
+  .breed-health-chart .chart-block,
+  .age-problems-chart .chart-block {
+    height: auto;
+    min-height: 240px;
+  }
+  .article-panel .chart-block canvas {
+    height: 240px !important;
+  }
+  .article-panel#articleByBehavior .chart-block {
+    min-height: 240px;
+  }
+
+  /* Quick-check: компактнее и чтобы контент не уезжал */
+  .quick-check-swap,
+  .quick-check-loading,
+  .quick-check-result {
+    min-height: 310px;
+    max-height: 310px;
+    overflow-y: auto;
+  }
+  .quick-check-chart-wrap canvas {
+    height: 200px !important;
+  }
+  .quick-check-left {
+    flex: 0 0 165px;
+  }
+  .quick-check-qtext {
+    font-size: 0.93rem;
+  }
+  .quick-check-btn {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+}
