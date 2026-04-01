@@ -2262,7 +2262,7 @@
       },
       {
         key: "q7",
-        text: "7. Мочеиспускание?",
+        text: "7. Есть ли изменения в мочеиспускании?",
         options: [
           "Без изменений",
           "Чаще, без крови",
@@ -2458,6 +2458,25 @@
       }
 
       var fontFamily = '"TT Days Sans", "Segoe UI", sans-serif';
+      var isOverlayCanvas = !!(overlayChartCanvas && targetCanvas === overlayChartCanvas);
+      function formatRadarPointLabel(label) {
+        var text = String(label || "").trim();
+        if (!isOverlayCanvas || text.length <= 14) return text;
+        var words = text.split(" ");
+        var lines = [];
+        var current = "";
+        for (var i = 0; i < words.length; i++) {
+          var candidate = current ? current + " " + words[i] : words[i];
+          if (candidate.length > 14 && current) {
+            lines.push(current);
+            current = words[i];
+          } else {
+            current = candidate;
+          }
+        }
+        if (current) lines.push(current);
+        return lines.slice(0, 2);
+      }
 
       var ctx = targetCanvas.getContext("2d");
       quickChart = new window.Chart(ctx, {
@@ -2491,11 +2510,14 @@
               ticks: {
                 stepSize: 2,
                 color: "#64748b",
-                font: { family: fontFamily, size: 12, weight: "600" },
+                font: { family: fontFamily, size: isOverlayCanvas ? 10 : 12, weight: "600" },
               },
               grid: { color: "rgba(100,116,139,0.25)" },
               angleLines: { color: "rgba(100,116,139,0.25)" },
-              pointLabels: { font: { family: fontFamily, size: 12, weight: "700" } },
+              pointLabels: {
+                font: { family: fontFamily, size: isOverlayCanvas ? 9 : 12, weight: "700" },
+                callback: function (label) { return formatRadarPointLabel(label); }
+              },
             },
           },
         },
