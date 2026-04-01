@@ -1297,16 +1297,16 @@
       hero: "/pictures/ages/elderly 2.jpg"
     },
     5: {
-      card: "/cursor-assets/c__Users_________AppData_Roaming_Cursor_User_workspaceStorage_7c2c2f0f299c795d4c8fadc58472aac5_images_senile-10b5f789-0eae-4620-91ea-7e7e09771ebd.png",
-      hero: "/cursor-assets/c__Users_________AppData_Roaming_Cursor_User_workspaceStorage_7c2c2f0f299c795d4c8fadc58472aac5_images_senile_2-08d9a054-b405-4817-af01-9fba05904c20.png"
+      card: "/pictures/ages/senile.jpg",
+      hero: "/pictures/ages/senile 2.jpg"
     }
   };
 
   // Привязка по названию возрастной группы (на случай несовпадений id/формата)
   var AGE_IMAGES_BY_NAME = {
     "Старческие (12+ лет)": {
-      card: "/cursor-assets/c__Users_________AppData_Roaming_Cursor_User_workspaceStorage_7c2c2f0f299c795d4c8fadc58472aac5_images_senile-10b5f789-0eae-4620-91ea-7e7e09771ebd.png",
-      hero: "/cursor-assets/c__Users_________AppData_Roaming_Cursor_User_workspaceStorage_7c2c2f0f299c795d4c8fadc58472aac5_images_senile_2-08d9a054-b405-4817-af01-9fba05904c20.png"
+      card: "/pictures/ages/senile.jpg",
+      hero: "/pictures/ages/senile 2.jpg"
     }
   };
 
