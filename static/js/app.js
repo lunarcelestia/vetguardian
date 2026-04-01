@@ -2311,12 +2311,39 @@
     var resultEl = document.getElementById("quickCheckResult");
     var aiTextEl = document.getElementById("quickCheckAiText");
     var chartCanvas = document.getElementById("quickCheckRadarChart");
+    var overlayEl = document.getElementById("quickCheckOverlay");
+    var overlayCloseBtn = document.getElementById("quickCheckOverlayClose");
+    var overlayLoadingEl = document.getElementById("quickCheckOverlayLoading");
+    var overlayResultEl = document.getElementById("quickCheckOverlayResult");
+    var overlayAiTextEl = document.getElementById("quickCheckOverlayAiText");
+    var overlayChartCanvas = document.getElementById("quickCheckOverlayRadarChart");
 
     if (!quickSwap || !qTextEl || !optionsEl || !backBtn || !nextBtn || !loadingEl || !resultEl || !aiTextEl || !chartCanvas) return;
 
     var quickIndex = 0;
     var quickAnswers = {};
     var quickChart = null;
+
+    function isPortraitPhoneQuickCheck() {
+      return window.matchMedia &&
+        window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches;
+    }
+
+    function closeQuickOverlay() {
+      if (!overlayEl) return;
+      overlayEl.classList.remove("open");
+      overlayEl.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("quick-check-overlay-open");
+      if (overlayLoadingEl) overlayLoadingEl.style.display = "none";
+      if (overlayResultEl) overlayResultEl.style.display = "none";
+      quickSwap.style.display = "flex";
+      loadingEl.style.display = "none";
+      resultEl.style.display = "none";
+    }
+
+    if (overlayCloseBtn) {
+      overlayCloseBtn.addEventListener("click", closeQuickOverlay);
+    }
 
     function setBackDisabled(disabled) {
       backBtn.disabled = !!disabled;
@@ -2399,24 +2426,27 @@
       return !!(q && quickAnswers[q.key]);
     }
 
-    function showLoading() {
-      quickSwap.style.display = "none";
-      loadingEl.style.display = "flex";
-      resultEl.style.display = "none";
+    function showLoading(target) {
+      var t = target || {};
+      if (t.swap) t.swap.style.display = "none";
+      if (t.loading) t.loading.style.display = "flex";
+      if (t.result) t.result.style.display = "none";
     }
 
-    function showResult() {
-      quickSwap.style.display = "none";
-      loadingEl.style.display = "none";
-      resultEl.style.display = "flex";
+    function showResult(target) {
+      var t = target || {};
+      if (t.swap) t.swap.style.display = "none";
+      if (t.loading) t.loading.style.display = "none";
+      if (t.result) t.result.style.display = "flex";
     }
 
     function escapeNewlinesToBr(s) {
       return String(s || "").replace(/\n/g, "<br>");
     }
 
-    function renderRadarChart(chartData) {
-      if (!chartData || !chartCanvas) return;
+    function renderRadarChart(chartData, canvasTarget) {
+      var targetCanvas = canvasTarget || chartCanvas;
+      if (!chartData || !targetCanvas) return;
       var labels = chartData.labels || [];
       var values = chartData.values || [];
       if (!labels.length || !values.length) return;
@@ -2428,7 +2458,7 @@
 
       var fontFamily = '"TT Days Sans", "Segoe UI", sans-serif';
 
-      var ctx = chartCanvas.getContext("2d");
+      var ctx = targetCanvas.getContext("2d");
       quickChart = new window.Chart(ctx, {
         type: "radar",
         data: {
@@ -2472,7 +2502,18 @@
     }
 
     function submitQuickCheck() {
-      showLoading();
+      var useOverlay = isPortraitPhoneQuickCheck() && overlayEl && overlayLoadingEl && overlayResultEl && overlayAiTextEl && overlayChartCanvas;
+      var target = useOverlay
+        ? { swap: quickSwap, loading: overlayLoadingEl, result: overlayResultEl, ai: overlayAiTextEl, canvas: overlayChartCanvas }
+        : { swap: quickSwap, loading: loadingEl, result: resultEl, ai: aiTextEl, canvas: chartCanvas };
+
+      if (useOverlay) {
+        overlayEl.classList.add("open");
+        overlayEl.setAttribute("aria-hidden", "false");
+        document.body.classList.add("quick-check-overlay-open");
+      }
+
+      showLoading(target);
       fetch(API + "/quick-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2482,14 +2523,18 @@
         .then(function (res) {
           if (!res || !res.ok) throw new Error((res && res.error) || "Ошибка");
           var aiText = res.ai_text || "";
-          aiTextEl.innerHTML = aiText ? escapeNewlinesToBr(aiText) : "По итогам опроса стоит обратить внимание на указанные параметры.";
-          renderRadarChart(res.chart || {});
-          showResult();
+          if (target.ai) {
+            target.ai.innerHTML = aiText ? escapeNewlinesToBr(aiText) : "По итогам опроса стоит обратить внимание на указанные параметры.";
+          }
+          renderRadarChart(res.chart || {}, target.canvas);
+          showResult(target);
         })
         .catch(function () {
-          aiTextEl.innerHTML = "Не удалось получить результат из Llama прямо сейчас. Попробуйте ещё раз позже.";
+          if (target.ai) {
+            target.ai.innerHTML = "Не удалось получить результат из Llama прямо сейчас. Попробуйте ещё раз позже.";
+          }
           // Пытаемся всё равно нарисовать по fallback-данным, если они пришли частично.
-          showResult();
+          showResult(target);
         });
     }
 
