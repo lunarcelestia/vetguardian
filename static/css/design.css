@@ -2429,3 +2429,135 @@ body::before {
     font-size: 0.9rem;
   }
 }
+
+/* Portrait-only fixes for phones/tablets:
+   1) banner without cropping and less vertical stretch
+   2) charts fully visible by width on narrow screens
+   3) quick-check options fit without inner scrolling */
+@media (max-width: 900px) and (orientation: portrait) {
+  .hero-banner {
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+
+  .hero-banner-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    background: #0f172a;
+    z-index: 0;
+  }
+
+  .hero-banner-inner {
+    max-width: 62%;
+  }
+
+  .breed-health-chart .chart-block,
+  .age-problems-chart .chart-block,
+  .article-panel#articleByBehavior .chart-block {
+    min-height: 220px;
+    height: auto !important;
+  }
+
+  .article-panel .chart-block canvas {
+    width: 100% !important;
+    height: 220px !important;
+    max-width: 100%;
+  }
+
+  .quick-check-left {
+    flex: 0 0 145px;
+  }
+
+  .quick-check-right {
+    padding: 10px;
+  }
+
+  .quick-check-swap,
+  .quick-check-loading,
+  .quick-check-result {
+    min-height: 380px;
+    max-height: 380px;
+    overflow-y: hidden;
+  }
+
+  .quick-check-qtext {
+    font-size: 0.9rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .quick-check-option {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .quick-check-option-text {
+    font-size: 0.86rem;
+    line-height: 1.25;
+  }
+
+  .quick-check-dot {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+  }
+
+  .quick-check-options {
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  .hero-banner {
+    aspect-ratio: 4 / 3;
+    border-radius: 20px;
+  }
+
+  .hero-banner-inner {
+    max-width: 60%;
+  }
+
+  .hero-banner-title {
+    font-size: 1.55rem;
+  }
+
+  .hero-banner-subtitle {
+    font-size: 0.92rem;
+  }
+
+  .hero-actions .btn-start {
+    padding: 10px 16px;
+    font-size: 0.94rem;
+  }
+
+  .breed-health-chart .chart-block,
+  .age-problems-chart .chart-block,
+  .article-panel#articleByBehavior .chart-block {
+    min-height: 200px;
+  }
+
+  .article-panel .chart-block canvas {
+    height: 200px !important;
+  }
+
+  .quick-check-left {
+    flex: 0 0 120px;
+  }
+
+  .quick-check-swap,
+  .quick-check-loading,
+  .quick-check-result {
+    min-height: 360px;
+    max-height: 360px;
+  }
+
+  .quick-check-btn {
+    padding: 9px 12px;
+    font-size: 0.84rem;
+  }
+}
