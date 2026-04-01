@@ -2230,6 +2230,86 @@ body::before {
   max-width: 100%;
 }
 
+.quick-check-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 280;
+  display: none;
+  background: rgba(12, 25, 41, 0.55);
+}
+
+.quick-check-modal {
+  width: 100%;
+  height: 100dvh;
+  background: #ffffff;
+  border-radius: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.quick-check-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.quick-check-modal-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 56px 14px 14px;
+}
+
+.quick-check-overlay .quick-check-loading {
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+  justify-content: center;
+}
+
+.quick-check-overlay .quick-check-result {
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+  overflow: auto;
+}
+
+.quick-check-overlay .quick-check-ai-brief {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  max-height: none;
+}
+
+.quick-check-overlay .quick-check-chart-wrap {
+  min-height: 220px;
+}
+
+.quick-check-overlay .quick-check-chart-wrap canvas {
+  height: 220px !important;
+}
+
+.quick-check-overlay.open {
+  display: block;
+}
+
+body.quick-check-overlay-open {
+  overflow: hidden;
+}
+
 .quick-check-swipe-out-next {
   transform: translateX(-28px);
   opacity: 0;
