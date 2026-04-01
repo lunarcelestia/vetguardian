@@ -278,6 +278,10 @@ body::before {
   height: auto;
 }
 
+.hero-banner picture {
+  display: block;
+}
+
 .hero-banner::before {
   content: "";
   position: absolute;
@@ -2437,7 +2441,7 @@ body::before {
 @media (max-width: 900px) and (orientation: portrait) {
   .hero-banner {
     min-height: 0;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 4 / 3;
   }
 
   .hero-banner-img {
@@ -2469,35 +2473,35 @@ body::before {
   }
 
   .quick-check-left {
-    flex: 0 0 145px;
+    flex: 0 0 130px;
   }
 
   .quick-check-right {
-    padding: 10px;
+    padding: 8px;
   }
 
   .quick-check-swap,
   .quick-check-loading,
   .quick-check-result {
-    min-height: 380px;
-    max-height: 380px;
+    min-height: 300px;
+    max-height: 300px;
     overflow-y: hidden;
   }
 
   .quick-check-qtext {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     line-height: 1.2;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .quick-check-option {
-    padding: 8px 10px;
-    gap: 8px;
+    padding: 7px 9px;
+    gap: 7px;
   }
 
   .quick-check-option-text {
-    font-size: 0.86rem;
-    line-height: 1.25;
+    font-size: 0.8rem;
+    line-height: 1.2;
   }
 
   .quick-check-dot {
@@ -2507,8 +2511,19 @@ body::before {
   }
 
   .quick-check-options {
-    gap: 6px;
-    margin-bottom: 6px;
+    gap: 5px;
+    margin-bottom: 4px;
+  }
+
+  .quick-check-btn {
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+
+  .quick-check-img {
+    object-fit: contain;
+    object-position: center bottom;
+    background: #f1f5f9;
   }
 }
 
@@ -2538,26 +2553,26 @@ body::before {
   .breed-health-chart .chart-block,
   .age-problems-chart .chart-block,
   .article-panel#articleByBehavior .chart-block {
-    min-height: 200px;
+    min-height: 210px;
   }
 
   .article-panel .chart-block canvas {
-    height: 200px !important;
+    height: 210px !important;
   }
 
   .quick-check-left {
-    flex: 0 0 120px;
+    flex: 0 0 118px;
   }
 
   .quick-check-swap,
   .quick-check-loading,
   .quick-check-result {
-    min-height: 360px;
-    max-height: 360px;
+    min-height: 300px;
+    max-height: 300px;
   }
 
   .quick-check-btn {
-    padding: 9px 12px;
-    font-size: 0.84rem;
+    padding: 8px 10px;
+    font-size: 0.8rem;
   }
 }
