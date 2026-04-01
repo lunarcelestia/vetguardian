@@ -2289,6 +2289,8 @@ body::before {
   max-height: none;
   height: 100%;
   overflow: auto;
+  padding-bottom: 12px;
+  box-sizing: border-box;
 }
 
 .quick-check-overlay .quick-check-ai-brief {
@@ -2298,11 +2300,13 @@ body::before {
 }
 
 .quick-check-overlay .quick-check-chart-wrap {
-  min-height: 220px;
+  min-height: 260px;
+  padding-bottom: 8px;
+  overflow: visible;
 }
 
 .quick-check-overlay .quick-check-chart-wrap canvas {
-  height: 220px !important;
+  height: 260px !important;
 }
 
 .quick-check-overlay.open {
@@ -2607,8 +2611,11 @@ body.quick-check-overlay-open {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     gap: 5px;
-    margin-top: 8px;
+    margin-top: 12px;
     margin-bottom: 4px;
+    padding-top: 10px;
+    padding-bottom: 6px;
+    scroll-padding-top: 8px;
   }
 
   .quick-check-actions {
