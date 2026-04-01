@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
   <link rel="stylesheet" href="/css/style.css?v=3">
-  <link rel="stylesheet" href="/css/design.css?v=5">
+  <link rel="stylesheet" href="/css/design.css?v=7">
   <link rel="icon" type="image/png" href="/pictures/logo%20mini.png">
   <link rel="apple-touch-icon" type="image/png" href="/pictures/logo%20mini.png">
     <!-- Chart.js для интерактивных графиков -->
@@ -278,6 +278,23 @@
         </div>
       </div>
     </section>
+    <div class="quick-check-overlay" id="quickCheckOverlay" aria-hidden="true">
+      <div class="quick-check-modal">
+        <button type="button" class="quick-check-modal-close" id="quickCheckOverlayClose" aria-label="Закрыть">×</button>
+        <div class="quick-check-modal-content">
+          <div class="quick-check-loading" id="quickCheckOverlayLoading" style="display:none;">
+            <div class="quick-check-spinner"></div>
+            <p>Считаем оценку...</p>
+          </div>
+          <div class="quick-check-result" id="quickCheckOverlayResult" style="display:none;">
+            <div class="quick-check-ai-brief" id="quickCheckOverlayAiText"></div>
+            <div class="quick-check-chart-wrap">
+              <canvas id="quickCheckOverlayRadarChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Секция ветклиник -->
     <section class="clinics-section" id="clinicsSection">
@@ -767,6 +784,6 @@
     </div>
   </section>
 
-  <script src="/js/app.js?v=8"></script>
+  <script src="/js/app.js?v=10"></script>
 </body>
 </html>
