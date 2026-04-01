@@ -1559,6 +1559,27 @@
 
     var fontFamily = '"TT Days Sans", "Segoe UI", sans-serif';
 
+    function formatMobileYAxisLabel(label) {
+      var text = String(label || "").trim();
+      if (!isPhoneCharts) return text;
+      if (text.length <= 16) return text;
+      var words = text.split(" ");
+      var lines = [];
+      var current = "";
+      for (var i = 0; i < words.length; i++) {
+        var candidate = current ? current + " " + words[i] : words[i];
+        if (candidate.length > 16 && current) {
+          lines.push(current);
+          current = words[i];
+        } else {
+          current = candidate;
+        }
+      }
+      if (current) lines.push(current);
+      return lines.slice(0, 3);
+    }
+
+    var dynamicBarThickness = isPhoneCharts ? 18 : 26;
     var datasetConfig = {
       label: title || "",
       data: data,
@@ -1572,7 +1593,7 @@
         bottomRight: 999
       },
       borderSkipped: "left",
-      barThickness: 26,
+      barThickness: dynamicBarThickness,
       categoryPercentage: 0.98,
       barPercentage: 1.0
     };
@@ -1626,7 +1647,11 @@
             ticks: {
               display: true,
               color: "#0f172a",
-              font: { family: fontFamily, size: isPhoneCharts ? 10 : 11, weight: "600" }
+              font: { family: fontFamily, size: isPhoneCharts ? 8 : 11, weight: "600" },
+              autoSkip: false,
+              callback: function (value, index) {
+                return formatMobileYAxisLabel(labels[index]);
+              }
             }
           }
         }
