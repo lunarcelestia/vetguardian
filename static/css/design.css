@@ -2236,13 +2236,16 @@ body::before {
   z-index: 280;
   display: none;
   background: rgba(12, 25, 41, 0.55);
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
 }
 
 .quick-check-modal {
-  width: 100%;
-  height: 100dvh;
+  width: min(94vw, 520px);
+  max-height: 88dvh;
   background: #ffffff;
-  border-radius: 0;
+  border-radius: 18px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2271,7 +2274,7 @@ body::before {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 56px 14px 14px;
+  padding: 54px 12px 12px;
 }
 
 .quick-check-overlay .quick-check-loading {
@@ -2303,7 +2306,7 @@ body::before {
 }
 
 .quick-check-overlay.open {
-  display: block;
+  display: flex;
 }
 
 body.quick-check-overlay-open {
@@ -2604,6 +2607,7 @@ body.quick-check-overlay-open {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     gap: 5px;
+    margin-top: 8px;
     margin-bottom: 4px;
   }
 
