@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0ea5e9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="VetGuardian — офлайн справочник и быстрый тест">
+  <title>VetGuardian — офлайн</title>
+  <link rel="manifest" href="/offline/manifest.json">
+  <link rel="apple-touch-icon" href="/offline/icon-192.png">
+  <link rel="stylesheet" href="/offline/styles.css">
+</head>
+<body data-page="home">
+  <div class="offline-topbar">
+    <strong>VetGuardian</strong> — красная кнопка (офлайн)
+  </div>
+
+  <p id="offline-blocked-msg" class="offline-alert offline-alert--error" hidden>
+    Офлайн-режим не активирован. Пожалуйста, подключитесь к интернету один раз и нажмите «Да, сохранить».
+  </p>
+
+  <p id="install-status-ok" class="offline-alert offline-alert--ok" hidden></p>
+  <p id="install-status-err" class="offline-alert offline-alert--error" hidden></p>
+
+  <main class="offline-main">
+    <div class="home-actions">
+      <a class="home-btn home-btn--handbook" href="handbook.html">Открытый справочник</a>
+      <a class="home-btn home-btn--test" href="quicktest.html">Быстрый тест</a>
+    </div>
+    <p class="home-hint">
+      Добавьте сайт на главный экран, чтобы всегда был под рукой.
+    </p>
+  </main>
+
+  <div id="install-banner" class="install-banner" hidden>
+    <p>
+      Чтобы пользоваться VetGuardian без интернета (в поездках, на даче), сохраните офлайн-справочник.
+      Это займёт около 2 МБ памяти. Разрешить?
+    </p>
+    <div class="install-banner__actions">
+      <button type="button" class="btn btn-primary" id="install-btn-yes">Да, сохранить</button>
+      <button type="button" class="btn btn-secondary" id="install-btn-no">Не сейчас</button>
+    </div>
+  </div>
+
+  <script src="/offline/script.js" defer></script>
+</body>
+</html>
