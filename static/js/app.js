@@ -43,6 +43,10 @@
     var quickSection = document.getElementById("quickCheckSection");
     if (quickSection) quickSection.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+  if (document.getElementById("navAiSupport")) document.getElementById("navAiSupport").addEventListener("click", function () {
+    var head = document.getElementById("vgAiAssistantHeading");
+    if (head) head.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   // ——— Мобильное меню: выдвижная панель справа ———
   var mobileMenuBtn = document.getElementById("mobileMenuBtn");
@@ -57,19 +61,31 @@
   if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openMobileNav);
   if (mobileNavOverlay) mobileNavOverlay.addEventListener("click", closeMobileNav);
   if (mobileNavClose) mobileNavClose.addEventListener("click", closeMobileNav);
+  function runNavAction(action) {
+    if (action === "analysis") openAnamnesisModal();
+    else if (action === "clinics") document.getElementById("clinicsSection").scrollIntoView({ behavior: "smooth" });
+    else if (action === "breeds") {
+      var petSection = document.getElementById("petInfoSection");
+      if (petSection) petSection.scrollIntoView({ behavior: "smooth" });
+    } else if (action === "quick-check") {
+      var quickSection = document.getElementById("quickCheckSection");
+      if (quickSection) quickSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (action === "ai-chat") {
+      var headAi = document.getElementById("vgAiAssistantHeading");
+      if (headAi) headAi.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (action === "cabinet") showCabinet();
+  }
+
   document.querySelectorAll(".mobile-nav-link").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      var action = btn.getAttribute("data-action");
-      if (action === "analysis") openAnamnesisModal();
-      else if (action === "clinics") document.getElementById("clinicsSection").scrollIntoView({ behavior: "smooth" });
-      else if (action === "breeds") {
-        var petSection = document.getElementById("petInfoSection");
-        if (petSection) petSection.scrollIntoView({ behavior: "smooth" });
-      } else if (action === "quick-check") {
-        var quickSection = document.getElementById("quickCheckSection");
-        if (quickSection) quickSection.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else if (action === "cabinet") showCabinet();
+      runNavAction(btn.getAttribute("data-action"));
       closeMobileNav();
+    });
+  });
+
+  document.querySelectorAll(".footer-nav-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      runNavAction(btn.getAttribute("data-action"));
     });
   });
 
@@ -82,6 +98,32 @@
       scrollBgOverlay.style.opacity = opacity;
     });
   }
+
+  // ——— Плавное появление секций при прокрутке ———
+  (function initScrollReveal() {
+    var nodes = document.querySelectorAll(".vg-scroll-reveal");
+    if (!nodes.length) return;
+    var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || !window.IntersectionObserver) {
+      nodes.forEach(function (el) {
+        el.classList.add("vg-scroll-reveal--visible");
+      });
+      return;
+    }
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          en.target.classList.add("vg-scroll-reveal--visible");
+          io.unobserve(en.target);
+        });
+      },
+      { root: null, rootMargin: "0px 0px -40px 0px", threshold: 0.06 }
+    );
+    nodes.forEach(function (el) {
+      io.observe(el);
+    });
+  })();
 
   // ——— Модальное окно анамнеза (пошагово) ———
   const stageTitle = document.getElementById("stageTitle");
@@ -674,7 +716,6 @@
     }
     // элементы паспорта
     var petNameSpan = document.getElementById("cabinetPetName");
-    var petBreedSpan = document.getElementById("cabinetPetBreed");
     var petEmailSpan = document.getElementById("cabinetEmail");
 
     fetch(API + "/me", { headers: authHeaders() })
@@ -690,7 +731,6 @@
         }
 
         if (petNameSpan) petNameSpan.textContent = res.user.name || "—";
-        if (petBreedSpan) petBreedSpan.textContent = (res.user.breed || "—");
         if (petEmailSpan) petEmailSpan.textContent = res.user.email || "—";
 
         if (cabinetSection) {
@@ -2192,6 +2232,104 @@
       if (behaviorListView) behaviorListView.style.display = "block";
     });
   }
+
+  // ——— Luna: карусель чек-листа на вертикальных узких экранах ———
+  (function initLunaChecklistCarousel() {
+    try {
+      var wrap = document.querySelector(".vg-ai-luna-cards-wrap");
+      var viewport = document.getElementById("vgAiLunaViewport");
+      var list = document.getElementById("vgAiLunaCards");
+      var nav = document.getElementById("vgAiLunaNav");
+      var prevBtn = document.getElementById("vgAiLunaPrev");
+      var nextBtn = document.getElementById("vgAiLunaNext");
+      if (!wrap || !viewport || !list || !nav || !prevBtn || !nextBtn) return;
+
+      var items = list.querySelectorAll(".vg-ai-check-item");
+      var count = items.length;
+      if (!count) return;
+
+      var index = 0;
+      var mq =
+        window.matchMedia &&
+        window.matchMedia("(max-width: 960px) and (orientation: portrait)");
+
+      function slidePercent() {
+        return 100 / count;
+      }
+
+      function applyTransform() {
+        var pct = slidePercent();
+        list.style.transform = "translateX(" + -index * pct + "%)";
+      }
+
+      function updateArrows() {
+        prevBtn.disabled = index <= 0;
+        nextBtn.disabled = index >= count - 1;
+      }
+
+      function setMode() {
+        var on = mq && mq.matches;
+        if (on) {
+          wrap.classList.add("vg-ai-luna-carousel--active");
+          nav.removeAttribute("hidden");
+          nav.setAttribute("aria-hidden", "false");
+          index = Math.min(Math.max(0, index), count - 1);
+          applyTransform();
+          updateArrows();
+        } else {
+          wrap.classList.remove("vg-ai-luna-carousel--active");
+          nav.setAttribute("hidden", "");
+          nav.setAttribute("aria-hidden", "true");
+          list.style.transform = "";
+          index = 0;
+          prevBtn.disabled = true;
+          nextBtn.disabled = false;
+        }
+      }
+
+      function go(delta) {
+        if (!mq || !mq.matches) return;
+        index = Math.min(Math.max(0, index + delta), count - 1);
+        applyTransform();
+        updateArrows();
+      }
+
+      prevBtn.addEventListener("click", function () {
+        go(-1);
+      });
+      nextBtn.addEventListener("click", function () {
+        go(1);
+      });
+
+      var touchStartX = 0;
+      viewport.addEventListener(
+        "touchstart",
+        function (e) {
+          if (!mq || !mq.matches || !e.touches[0]) return;
+          touchStartX = e.touches[0].clientX;
+        },
+        { passive: true }
+      );
+      viewport.addEventListener("touchend", function (e) {
+        if (!mq || !mq.matches) return;
+        var t = e.changedTouches && e.changedTouches[0];
+        if (!t) return;
+        var dx = t.clientX - touchStartX;
+        if (Math.abs(dx) < 42) return;
+        if (dx < 0) go(1);
+        else go(-1);
+      });
+
+      if (mq && mq.addEventListener) mq.addEventListener("change", setMode);
+      else if (mq && mq.addListener) mq.addListener(setMode);
+      setMode();
+      window.addEventListener("orientationchange", function () {
+        window.setTimeout(setMode, 280);
+      });
+    } catch (err) {
+      console.error("Luna carousel init error:", err);
+    }
+  })();
 
   // ——— Быстрый опрос: Проверь питомца ———
   (function () {

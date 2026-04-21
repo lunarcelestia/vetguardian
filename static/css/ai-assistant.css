@@ -1,0 +1,1193 @@
+/* VetGuardian — ИИ-ассистент (изолированные классы vg-ai-*) */
+.vg-ai-section {
+  margin-top: 3rem;
+  padding: 0 clamp(10px, 2.2vw, 28px) 2.5rem;
+  scroll-margin-top: 24px;
+  overflow: visible;
+}
+
+/* Ряд чат + Luna: на широком экране колонка Luna по высоте = карточка чата; PNG 3:2 — object-fit: contain без crop. */
+.vg-ai-split {
+  max-width: min(1720px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: visible;
+}
+
+/* Заголовок секции на всю ширину блока (как у контента ниже) */
+.vg-ai-split__header {
+  max-width: 100%;
+  margin: 0 0 1.25rem;
+  text-align: left;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.vg-ai-split__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: clamp(14px, 2.4vw, 32px);
+  overflow: visible;
+}
+
+/* Десктоп: прежняя высота ряда чат + Luna (равная колонкам), лёгкая подрезка снизу у карточки чата */
+@media (min-width: 961px) {
+  .vg-ai-split__main {
+    min-height: clamp(600px, 72vh, 860px);
+    align-items: stretch;
+  }
+
+  .vg-ai-col--chat,
+  .vg-ai-col--luna {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .vg-ai-col--luna {
+    flex: 1 1 720px;
+    max-width: 100%;
+  }
+
+  .vg-ai-inner {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .vg-ai-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* минимальный зазор под дисклеймером */
+    padding-bottom: 4px;
+  }
+
+  .vg-ai-messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .vg-ai-luna-figure {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+  }
+
+  .vg-ai-disclaimer {
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 1.35;
+  }
+}
+
+.vg-ai-col--chat {
+  flex: 0 1 620px;
+  min-width: 0;
+  max-width: min(620px, 100%);
+  opacity: 0;
+  transform: translateX(-28px);
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1), transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vg-ai-section--inview .vg-ai-col--chat {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.vg-ai-inner {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.vg-ai-header {
+  text-align: inherit;
+  margin-bottom: 0;
+  max-width: 100%;
+}
+
+.vg-ai-title {
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text, #0c1929);
+  margin: 0 0 1rem;
+  font-family: var(--font, "TT Days Sans", sans-serif);
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  /* якорь «Поддержка»: заголовок под фиксированной шапкой, не уезжает вверх */
+  scroll-margin-top: clamp(96px, 14vh, 168px);
+}
+
+.vg-ai-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--gray-light, #cbd5e1);
+  border-radius: 24px;
+  box-shadow: var(--shadow, 0 4px 20px rgba(14, 165, 233, 0.12));
+  padding: 20px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.2s;
+}
+
+.vg-ai-section--inview .vg-ai-col--chat .vg-ai-card {
+  opacity: 1;
+}
+
+.vg-ai-messages {
+  min-height: 340px;
+  max-height: min(68vh, 700px);
+  overflow-y: auto;
+  padding: 8px 6px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vg-ai-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.vg-ai-row--user {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.vg-ai-row--assistant {
+  align-self: flex-start;
+}
+
+.vg-ai-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--pastel, #e0f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+.vg-ai-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vg-ai-avatar--user {
+  background: linear-gradient(160deg, #7dd3fc, #38bdf8) !important;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
+}
+
+.vg-ai-pending-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--pastel, #e0f2fe);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  font-family: var(--font, "TT Days Sans", sans-serif);
+}
+
+.vg-ai-pending-wrap[hidden] {
+  display: none !important;
+}
+
+.vg-ai-pending-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.vg-ai-pending-name {
+  flex: 1 1 auto;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted, #334155);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-ai-pending-remove {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text, #0c1929);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.vg-ai-pending-remove:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.vg-ai-bubble {
+  max-width: min(100%, 78%);
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 1rem;
+  line-height: 1.55;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  word-break: break-word;
+  font-family: var(--font, "TT Days Sans", sans-serif);
+}
+
+.vg-ai-bubble--assistant {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: var(--text, #0c1929);
+  border-bottom-left-radius: 6px;
+}
+
+.vg-ai-bubble--user {
+  background: linear-gradient(145deg, #38bdf8, #0ea5e9);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+
+.vg-ai-bubble--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.vg-ai-bubble-text {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.vg-ai-thumb {
+  margin-top: 8px;
+  border-radius: 12px;
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.vg-ai-audio {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.vg-ai-meta {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  margin-top: 6px;
+}
+
+.vg-ai-typing {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px;
+  align-self: flex-start;
+  margin-left: 12px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.vg-ai-typing--hidden {
+  display: none;
+}
+
+.vg-ai-typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sky-dark, #0ea5e9);
+  animation: vg-ai-dot 1.2s infinite ease-in-out both;
+}
+
+.vg-ai-typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.vg-ai-typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes vg-ai-dot {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.65);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.vg-ai-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.vg-ai-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Микрофон: высота как у кнопки вложения; пульс записи — поверх потока, не сдвигает ряд */
+.vg-ai-mic-stack {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vg-ai-rec-pulse {
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  opacity: 0;
+  transform: scale(0.55);
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.vg-ai-mic-stack--recording .vg-ai-rec-pulse {
+  opacity: 1;
+  animation: vg-ai-rec-breath 1.05s ease-in-out infinite;
+}
+
+@keyframes vg-ai-rec-breath {
+  0%,
+  100% {
+    transform: scale(0.65);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.vg-ai-tool-btn {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s ease;
+  font-family: inherit;
+  box-shadow: none;
+  padding: 0;
+}
+
+.vg-ai-tool-btn:hover {
+  background: rgba(241, 245, 249, 0.95);
+  border-color: #e2e8f0;
+}
+
+.vg-ai-tool-btn:active {
+  transform: scale(0.96);
+}
+
+.vg-ai-mic-stack--recording .vg-ai-tool-btn {
+  background: rgba(241, 245, 249, 0.85);
+  border-color: #e2e8f0;
+}
+
+.vg-ai-tool-img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.vg-ai-mic-stack--recording .vg-ai-tool-btn .vg-ai-tool-img {
+  transform: scale(1.12);
+}
+
+.vg-ai-input-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.vg-ai-textarea {
+  width: 100%;
+  min-height: 48px;
+  max-height: 160px;
+  resize: none;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--gray-light, #cbd5e1);
+  font-family: var(--font, "TT Days Sans", sans-serif);
+  font-size: 1rem;
+  line-height: 1.45;
+  background: #fff;
+  color: var(--text, #0c1929);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.vg-ai-textarea:focus {
+  outline: none;
+  border-color: var(--sky-dark, #0ea5e9);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+}
+
+.vg-ai-send-btn {
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(145deg, #0ea5e9, #0284c7);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: var(--font, "TT Days Sans", sans-serif);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+  transition: transform 0.15s, opacity 0.2s;
+}
+
+.vg-ai-send-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.vg-ai-send-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.vg-ai-send-arrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.vg-ai-disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+  margin: 4px 0 0;
+  font-family: var(--font, "TT Days Sans", sans-serif);
+}
+
+.vg-ai-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Колонка Luna: забирает всё свободное место в ряду (без искусственного max 920px) */
+.vg-ai-col--luna {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 min(520px, 50vw);
+  min-width: min(300px, 100%);
+  max-width: 100%;
+  min-height: 0;
+  overflow: visible;
+  align-self: stretch;
+  opacity: 0;
+  transform: translateX(28px);
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, transform 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+}
+
+.vg-ai-section--inview .vg-ai-col--luna {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.vg-ai-luna-figure {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 24px;
+  /* Фон «карточки Luna» как в макете: бирюза за PNG, чат остаётся белой карточкой слева */
+  background: linear-gradient(155deg, #bae6fd 0%, #38bdf8 28%, #0ea5e9 62%, #0284c7 100%);
+  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.25);
+}
+
+.vg-ai-luna-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  /* cover — без «полей» сверху/снизу у PNG в высокой карточке (contain оставлял полосы) */
+  object-fit: cover;
+  object-position: center 22%;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+}
+
+.vg-ai-luna-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 2;
+}
+
+/* Одна колонка для заголовка и ul — общий right/left с кнопками, без отдельного absolute у текста */
+.vg-ai-luna-rail {
+  position: absolute;
+  left: 52%;
+  /* чуть левее — заголовок и список ближе к центру картинки */
+  right: 4.5%;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px max(10px, 2.2%) 0 0;
+  box-sizing: border-box;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.vg-ai-luna-rail > * {
+  pointer-events: auto;
+}
+
+.vg-ai-luna-head {
+  position: relative;
+  flex: 0 0 auto;
+  flex-shrink: 1;
+  /* min-width: 0 — иначе flex не сжимает блок ниже ширины nowrap-текста и текст вылезает за figure */
+  min-width: 0;
+  margin: 0;
+  margin-top: 2.5%;
+  margin-bottom: clamp(14px, 2.4vw, 22px);
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  display: block;
+  padding: 0 0 0 4px;
+  padding-right: max(12px, 0.35em);
+  box-sizing: border-box;
+  font-family: var(--font, "TT Days Sans", sans-serif);
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.18;
+  text-align: right;
+  text-shadow: none;
+  /* заголовок: заметнее влево на странице (блок правого края) */
+  transform: translateX(-clamp(22px, 3.2vw, 64px));
+}
+
+.vg-ai-luna-head-br {
+  display: block;
+  margin: 0.08em 0 0;
+}
+
+/* По умолчанию как раньше: ряд, блок списка тянется по высоте под колонку чата */
+.vg-ai-luna-cards-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  flex-shrink: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  gap: 0;
+}
+
+.vg-ai-luna-mob-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* не min-height:0 — иначе колонка Luna сжимается по высоте относительно чата */
+  min-height: auto;
+  align-self: stretch;
+}
+
+.vg-ai-luna-mob-nav {
+  display: none;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0 2px;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+.vg-ai-luna-mob-arrow {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text, #0c1929);
+  font-size: 1.65rem;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+  font-family: inherit;
+}
+
+.vg-ai-luna-mob-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.vg-ai-luna-mob-arrow:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.vg-ai-luna-line1,
+.vg-ai-luna-line2 {
+  display: block;
+  width: 100%;
+  text-align: right;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.85s ease, transform 0.85s ease;
+  color: #fff;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Ровно две строки: «ОБРАТИТЕ ВНИМАНИЕ» | «НА ВАШЕГО ПИТОМЦА» */
+.vg-ai-luna-line1 {
+  font-size: clamp(1.15rem, 2.95vw, 2.52rem);
+}
+
+.vg-ai-luna-line2 {
+  font-size: clamp(1.02rem, 2.62vw, 2.2rem);
+  letter-spacing: 0.05em;
+}
+
+.vg-ai-section--inview .vg-ai-luna-line1 {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.35s;
+}
+
+.vg-ai-section--inview .vg-ai-luna-line2 {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.55s;
+}
+
+.vg-ai-luna-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-left: 0;
+  margin-right: 0;
+  overflow: visible;
+}
+
+.vg-ai-check-item {
+  margin: 0;
+  padding: 6px 8px;
+  overflow: visible;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.vg-ai-section--inview .vg-ai-check-item:nth-child(1) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.7s;
+}
+
+.vg-ai-section--inview .vg-ai-check-item:nth-child(2) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.78s;
+}
+
+.vg-ai-section--inview .vg-ai-check-item:nth-child(3) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.86s;
+}
+
+.vg-ai-section--inview .vg-ai-check-item:nth-child(4) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.94s;
+}
+
+.vg-ai-section--inview .vg-ai-check-item:nth-child(5) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 1.02s;
+}
+
+.vg-ai-check-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  border: 1px solid rgba(226, 232, 240, 0.98);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 15px;
+  padding: 15px 17px;
+  margin: 0;
+  min-height: 4.85rem;
+  cursor: default;
+  font-family: var(--font, "TT Days Sans", sans-serif);
+  font-size: clamp(0.92rem, 1.18vw, 1.1rem);
+  font-weight: 600;
+  color: var(--text, #0c1929);
+  line-height: 1.28;
+  box-sizing: border-box;
+  transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.vg-ai-check-item:hover .vg-ai-check-inner,
+.vg-ai-check-item:focus-within .vg-ai-check-inner {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(148, 163, 184, 0.55);
+}
+
+.vg-ai-paw-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+}
+
+.vg-ai-paw {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  transition: opacity 0.32s ease;
+}
+
+.vg-ai-paw--on {
+  opacity: 0;
+}
+
+.vg-ai-check-item:hover .vg-ai-paw--on,
+.vg-ai-check-item:focus-within .vg-ai-paw--on {
+  opacity: 1;
+}
+
+.vg-ai-check-item:hover .vg-ai-paw--off,
+.vg-ai-check-item:focus-within .vg-ai-paw--off {
+  opacity: 0;
+}
+
+.vg-ai-check-text {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 4.35rem;
+  display: flex;
+  align-items: center;
+}
+
+.vg-ai-check-short {
+  display: block;
+  width: 100%;
+  font-size: 1.06em;
+  transition: opacity 0.22s ease;
+}
+
+.vg-ai-check-long {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  margin: 0;
+  padding: 6px 4px 4px 0;
+  font-weight: 600;
+  font-size: clamp(0.72rem, 0.98vw, 0.86rem);
+  letter-spacing: 0.01em;
+  line-height: 1.38;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.22s ease;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vg-ai-check-item:hover .vg-ai-check-short,
+.vg-ai-check-item:focus-within .vg-ai-check-short {
+  opacity: 0;
+}
+
+.vg-ai-check-item:hover .vg-ai-check-long,
+.vg-ai-check-item:focus-within .vg-ai-check-long {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 960px) {
+  .vg-ai-split__main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vg-ai-col--chat {
+    flex-basis: 100%;
+    max-width: 100%;
+    transform: translateX(-18px);
+  }
+
+  .vg-ai-section--inview .vg-ai-col--chat {
+    transform: translateX(0);
+  }
+
+  .vg-ai-col--luna {
+    flex: 1 1 auto;
+    max-width: min(900px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+    align-self: stretch;
+    transform: translateX(40px);
+  }
+
+  .vg-ai-section--inview .vg-ai-col--luna {
+    transform: translateX(0);
+  }
+
+  .vg-ai-luna-figure {
+    flex: 0 0 auto;
+    aspect-ratio: 3 / 2;
+    width: 100%;
+    max-width: min(900px, 100%);
+  }
+
+  .vg-ai-luna-rail {
+    left: 48%;
+    right: 5.5%;
+    padding: 8px max(10px, 2.4%) 0 0;
+  }
+
+  .vg-ai-luna-head {
+    margin-top: 2%;
+    width: 100%;
+    max-width: 100%;
+    transform: translateX(-clamp(16px, 2.8vw, 40px));
+  }
+
+  .vg-ai-luna-cards {
+    max-width: 100%;
+  }
+
+  .vg-ai-luna-line1 {
+    font-size: clamp(1.06rem, 3.05vw, 1.9rem);
+  }
+
+  .vg-ai-luna-line2 {
+    font-size: clamp(0.92rem, 2.58vw, 1.58rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-ai-col--chat,
+  .vg-ai-col--luna,
+  .vg-ai-card,
+  .vg-ai-luna-line1,
+  .vg-ai-luna-line2,
+  .vg-ai-check-item {
+    transition-duration: 0.2s !important;
+    transition-delay: 0ms !important;
+  }
+
+  .vg-ai-col--chat {
+    transform: translateX(-8px);
+  }
+
+  .vg-ai-section--inview .vg-ai-col--chat {
+    transform: translateX(0);
+  }
+
+  .vg-ai-col--luna {
+    transform: translateX(8px);
+  }
+
+  .vg-ai-section--inview .vg-ai-col--luna {
+    transform: translateX(0);
+  }
+
+  .vg-ai-check-inner {
+    transition-duration: 0.15s !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .vg-ai-section {
+    padding: 0 clamp(10px, 3.5vw, 18px) 1.5rem;
+    margin-top: 2rem;
+    scroll-margin-top: 20px;
+  }
+
+  .vg-ai-inner {
+    max-width: 100%;
+  }
+
+  .vg-ai-split__header {
+    max-width: 100%;
+  }
+
+  .vg-ai-title {
+    font-size: clamp(0.72rem, 3.2vw, 1.35rem);
+    margin-bottom: 0.65rem;
+  }
+
+  .vg-ai-luna-rail {
+    left: 40%;
+    right: 4.5%;
+    padding: 6px max(8px, 2.4%) 0 0;
+  }
+
+  .vg-ai-luna-head {
+    margin-top: 2%;
+    width: 100%;
+    max-width: 100%;
+    transform: translateX(-clamp(10px, 2.2vw, 28px));
+  }
+
+  .vg-ai-luna-line1 {
+    font-size: clamp(0.78rem, 3.65vw, 1.22rem);
+  }
+
+  .vg-ai-luna-line2 {
+    font-size: clamp(0.68rem, 3.12vw, 1.04rem);
+  }
+
+  .vg-ai-check-inner {
+    font-size: clamp(0.68rem, 2.6vw, 0.82rem);
+    padding: 11px 11px;
+    min-height: 3.75rem;
+    gap: 9px;
+    border-radius: 14px;
+  }
+
+  .vg-ai-paw-wrap {
+    width: 28px;
+    height: 28px;
+  }
+
+  .vg-ai-paw {
+    width: 28px;
+    height: 28px;
+  }
+
+  .vg-ai-luna-cards {
+    gap: 7px;
+    max-width: 100%;
+    padding: 0 4px;
+  }
+
+  .vg-ai-check-text {
+    min-height: 3.5rem;
+  }
+
+  .vg-ai-check-long {
+    font-size: clamp(0.64rem, 2.6vw, 0.78rem);
+  }
+
+  .vg-ai-card {
+    padding: 14px 12px 12px;
+    border-radius: 18px;
+  }
+
+  .vg-ai-messages {
+    min-height: 300px;
+    max-height: min(62vh, 620px);
+  }
+
+  .vg-ai-tool-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+  }
+
+  .vg-ai-mic-stack {
+    width: 52px;
+    height: 52px;
+  }
+
+  .vg-ai-tool-img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .vg-ai-send-btn {
+    min-height: 52px;
+    padding: 0 14px;
+    font-size: 0.9rem;
+  }
+
+  .vg-ai-send-label {
+    display: none;
+  }
+
+  .vg-ai-bubble {
+    max-width: 88%;
+    font-size: 0.95rem;
+  }
+
+  .vg-ai-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+}
+
+/* Luna: на вертикальных узких экранах — одна карточка, стрелки, свайп по горизонтали */
+@media (max-width: 960px) and (orientation: portrait) {
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-mob-nav {
+    display: flex;
+  }
+
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-mob-viewport {
+    overflow: hidden;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-cards {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 500%;
+    max-width: none;
+    margin: 0;
+    padding: 0 2px;
+    gap: 0;
+    align-items: stretch;
+    transition: transform 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: transform;
+  }
+
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-check-item {
+    flex: 0 0 20%;
+    width: 20%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: 6px 4px;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: opacity 0.2s ease, transform 0.2s ease !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+@media (max-width: 960px) and (orientation: portrait) and (prefers-reduced-motion: reduce) {
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-cards {
+    transition-duration: 0.15s;
+  }
+}
+
+@media (min-width: 601px) {
+  .vg-ai-send-arrow {
+    display: none;
+  }
+}

@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
+import os
+import shutil
+import subprocess
+import tempfile
 from pathlib import Path
 
-from flask import Blueprint, request, jsonify
+import requests
+from flask import Blueprint, Response, jsonify, request, stream_with_context
 
 from config import Config
 from database import get_connection
@@ -12,6 +17,224 @@ from llama_service import quick_check_scores_and_chart
 from routes.auth import get_user_from_request
 
 api_bp = Blueprint("api", __name__)
+
+
+def _openai_api_base() -> str:
+    return (getattr(Config, "OPENAI_API_BASE", None) or "https://openai.api.proxyapi.ru/v1").rstrip("/")
+
+
+def _normalize_proxy_model(model):
+    """ProxyAPI часто ожидает префикс openai/ для GPT; whisper оставляем как есть."""
+    m = (model or "").strip()
+    if not m:
+        return (getattr(Config, "OPENAI_API_MODEL", None) or "openai/gpt-4o-mini").strip() or "openai/gpt-4o-mini"
+    if "/" in m:
+        return m
+    if m.startswith("gpt-"):
+        return "openai/" + m
+    return m
+
+
+def _safe_int(val, default: int) -> int:
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return default
+
+
+def _sniff_audio_upload(raw: bytes, fallback_name: str, fallback_mime: str):
+    """
+    LiteLLM/ffmpeg часто не вытаскивают duration из «битого» имени/mime.
+    Определяем контейнер по сигнатуре и выставляем audio/*.
+    """
+    if not raw:
+        return "empty.bin", "application/octet-stream"
+    head = raw[:16]
+    if head[:4] == b"OggS":
+        return "recording.ogg", "audio/ogg"
+    if head[:4] == b"\x1a\x45\xdf\xa3":
+        return "recording.webm", "audio/webm"
+    if head[:4] == b"RIFF" and len(raw) > 12 and raw[8:12] == b"WAVE":
+        return "recording.wav", "audio/wav"
+    if len(head) >= 2 and head[0] == 0xFF and (head[1] & 0xE0) == 0xE0:
+        return "recording.mp3", "audio/mpeg"
+    fn = (fallback_name or "recording.webm").strip()
+    mt = (fallback_mime or "application/octet-stream").strip()
+    if "." not in fn:
+        if "ogg" in mt.lower():
+            fn = "recording.ogg"
+        elif "webm" in mt.lower():
+            fn = "recording.webm"
+        else:
+            fn = "recording.webm"
+    return fn, mt if mt.startswith("audio/") else "audio/webm"
+
+
+def _ffmpeg_to_wav_16k_mono(raw: bytes, src_suffix: str):
+    """
+    LiteLLM часто не читает браузерный WebM; перекодируем в моно WAV 16 kHz (Whisper-friendly).
+    Возвращает bytes WAV или None, если ffmpeg нет / ошибка.
+    """
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg or not raw or len(raw) < 64:
+        return None
+    src_suffix = (src_suffix or ".webm").strip()
+    if not src_suffix.startswith("."):
+        src_suffix = "." + src_suffix
+    td = tempfile.mkdtemp(prefix="vg_whisper_")
+    try:
+        path_in = os.path.join(td, "input" + src_suffix)
+        path_out = os.path.join(td, "out.wav")
+        with open(path_in, "wb") as wf:
+            wf.write(raw)
+        proc = subprocess.run(
+            [
+                ffmpeg,
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-y",
+                "-i",
+                path_in,
+                "-ac",
+                "1",
+                "-ar",
+                "16000",
+                "-f",
+                "wav",
+                path_out,
+            ],
+            capture_output=True,
+            timeout=90,
+        )
+        if proc.returncode != 0 or not os.path.isfile(path_out):
+            return None
+        with open(path_out, "rb") as rf:
+            out = rf.read()
+        return out if len(out) > 200 else None
+    except Exception:
+        return None
+    finally:
+        shutil.rmtree(td, ignore_errors=True)
+
+
+@api_bp.route("/api/ai-assistant/chat", methods=["POST"])
+def ai_assistant_chat():
+    """
+    Прокси чата ИИ-ассистента: браузер → Flask (без CORS к ProxyAPI) → OpenAI-совместимый API.
+    Тело как у OpenAI: model, messages, stream?, temperature, max_tokens.
+    """
+    body = request.get_json(silent=True) or {}
+    messages = body.get("messages")
+    if not isinstance(messages, list):
+        return jsonify({"ok": False, "error": "Нужен массив messages"}), 400
+
+    api_key = (getattr(Config, "OPENAI_API_KEY", None) or "").strip()
+    if not api_key:
+        return jsonify({"ok": False, "error": "На сервере не задан OPENAI_API_KEY (.env)"}), 503
+
+    base = _openai_api_base()
+    url = f"{base}/chat/completions"
+    model = _normalize_proxy_model(body.get("model"))
+    stream_flag = bool(body.get("stream"))
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": float(body.get("temperature", 0.5)),
+        "max_tokens": _safe_int(body.get("max_tokens"), 1800),
+        "stream": stream_flag,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    if stream_flag:
+
+        @stream_with_context
+        def generate():
+            try:
+                with requests.post(
+                    url, headers=headers, json=payload, stream=True, timeout=180
+                ) as r:
+                    if r.status_code != 200:
+                        err = (r.text or r.reason or "")[:8000]
+                        yield (
+                            "data: "
+                            + json.dumps({"error": {"message": err}}, ensure_ascii=False)
+                            + "\n\n"
+                        ).encode("utf-8")
+                        return
+                    for chunk in r.iter_content(chunk_size=4096):
+                        if chunk:
+                            yield chunk
+            except requests.RequestException as e:
+                yield (
+                    "data: "
+                    + json.dumps({"error": {"message": str(e)}}, ensure_ascii=False)
+                    + "\n\n"
+                ).encode("utf-8")
+
+        return Response(generate(), mimetype="text/event-stream")
+
+    try:
+        r = requests.post(url, headers=headers, json=payload, timeout=180)
+        ct = r.headers.get("Content-Type") or "application/json"
+        return Response(r.content, status=r.status_code, content_type=ct)
+    except requests.RequestException as e:
+        return jsonify({"error": {"message": str(e)}}), 502
+
+
+@api_bp.route("/api/ai-assistant/transcribe", methods=["POST"])
+def ai_assistant_transcribe():
+    """Прокси Whisper: multipart file → ProxyAPI /v1/audio/transcriptions."""
+    try:
+        api_key = (getattr(Config, "OPENAI_API_KEY", None) or "").strip()
+        if not api_key:
+            return jsonify({"error": {"message": "На сервере не задан OPENAI_API_KEY (.env)"}}), 503
+
+        if "file" not in request.files:
+            return jsonify({"error": {"message": "Нет файла"}}), 400
+        f = request.files["file"]
+        raw = f.read()
+        if not raw:
+            return jsonify({"error": {"message": "Пустой файл"}}), 400
+
+        base = _openai_api_base()
+        url = f"{base}/audio/transcriptions"
+        filename, mime = _sniff_audio_upload(raw, f.filename or "", f.mimetype or "")
+
+        ext = os.path.splitext(filename)[1].lower() or ".webm"
+        wav_bytes = _ffmpeg_to_wav_16k_mono(raw, ext)
+        if wav_bytes:
+            upload_bytes = wav_bytes
+            filename = "recording.wav"
+            mime = "audio/wav"
+        else:
+            upload_bytes = raw
+
+        files = {"file": (filename, upload_bytes, mime)}
+        data = {
+            "model": (request.form.get("model") or "whisper-1").strip(),
+            "language": (request.form.get("language") or "ru").strip(),
+        }
+
+        try:
+            r = requests.post(
+                url,
+                headers={"Authorization": f"Bearer {api_key}"},
+                files=files,
+                data=data,
+                timeout=120,
+            )
+        except requests.RequestException as e:
+            return jsonify({"error": {"message": str(e)}}), 502
+
+        ct = r.headers.get("Content-Type") or "application/json"
+        return Response(r.content, status=r.status_code, content_type=ct)
+    except Exception as e:
+        return jsonify({"error": {"message": f"Ошибка прокси transcribe: {e!s}"}}), 500
 
 
 def _load_clinics():

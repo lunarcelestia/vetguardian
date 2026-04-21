@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
   <link rel="stylesheet" href="/css/style.css?v=3">
-  <link rel="stylesheet" href="/css/design.css?v=9">
-  <link rel="icon" type="image/png" href="/pictures/logo%20mini.png">
-  <link rel="apple-touch-icon" type="image/png" href="/pictures/logo%20mini.png">
+  <link rel="stylesheet" href="/css/design.css?v=13">
+  <link rel="stylesheet" href="/css/ai-assistant.css?v=7">
+  <link rel="icon" type="image/png" href="/pictures/new_logo.png">
+  <link rel="apple-touch-icon" type="image/png" href="/pictures/new_logo.png">
     <!-- Chart.js для интерактивных графиков -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -17,13 +18,14 @@
   <!-- Шапка -->
   <header class="header">
     <a href="/" class="header-logo-link">
-      <img src="https://s.fotora.ru/d95ad514bb7c3b9f.png" alt="VetGuardian" class="header-logo">
+      <img src="/pictures/new_logo.png" alt="VetGuardian" class="header-logo">
     </a>
     <nav class="header-nav">
       <button type="button" class="nav-btn" id="navAnalysis">Обследование</button>
       <button type="button" class="nav-btn" id="navClinics">Ветклиники</button>
       <button type="button" class="nav-btn" id="navBreeds">О собаках</button>
       <button type="button" class="nav-btn" id="navQuickCheck">Проверь питомца</button>
+      <button type="button" class="nav-btn" id="navAiSupport">Поддержка</button>
       <button type="button" class="nav-btn nav-cabinet" id="navCabinet" aria-label="Личный кабинет">
         <img src="https://s.fotora.ru/fe35920ab59db595.png" alt="Личный кабинет">
       </button>
@@ -42,13 +44,14 @@
       <button type="button" class="mobile-nav-link" data-action="clinics">Ветклиники</button>
       <button type="button" class="mobile-nav-link" data-action="breeds">Узнать питомца лучше</button>
         <button type="button" class="mobile-nav-link" data-action="quick-check">Проверь питомца</button>
+      <button type="button" class="mobile-nav-link" data-action="ai-chat">Поддержка</button>
       <button type="button" class="mobile-nav-link" data-action="cabinet">Личный кабинет</button>
     </nav>
   </div>
 
   <main class="main-content" id="mainContent">
     <!-- Hero -->
-    <section class="hero">
+    <section class="hero vg-scroll-reveal">
       <div class="hero-banner">
         <picture>
           <source media="(max-width: 767px) and (orientation: portrait)" srcset="/pictures/banner%20for%20phone.jpg">
@@ -65,7 +68,7 @@
     </section>
 
     <!-- Узнай питомца лучше -->
-    <section class="pet-info-section" id="petInfoSection">
+    <section class="pet-info-section vg-scroll-reveal" id="petInfoSection">
       <h2 class="pet-info-title">О СОБАКАХ</h2>
       <div class="pet-info-cards" id="petInfoCards">
         <button type="button" class="pet-info-card" id="articlesByBreedBtn">
@@ -233,8 +236,141 @@
       </div>
     </section>
 
+    <!-- ИИ-ассистент (чат, голос, фото/видео) + блок «обратите внимание» на Luna -->
+    <section class="vg-ai-section vg-scroll-reveal" id="vgAiAssistantSection" aria-labelledby="vgAiAssistantHeading">
+      <div class="vg-ai-split">
+        <header class="vg-ai-header vg-ai-split__header">
+          <h2 class="vg-ai-title" id="vgAiAssistantHeading">ВАШ ВЕТЕРИНАРНЫЙ ПОМОЩНИК — БЫСТРАЯ ПОМОЩЬ В ЧАТЕ</h2>
+        </header>
+        <div class="vg-ai-split__main">
+          <div class="vg-ai-col vg-ai-col--chat">
+            <div class="vg-ai-inner">
+              <div class="vg-ai-card" id="vgAiCard">
+                <div class="vg-ai-messages" id="vgAiMessages" role="log" aria-live="polite" aria-relevant="additions"></div>
+                <div class="vg-ai-typing vg-ai-typing--hidden" id="vgAiTyping" aria-hidden="true">
+                  <span class="vg-ai-typing-dot"></span>
+                  <span class="vg-ai-typing-dot"></span>
+                  <span class="vg-ai-typing-dot"></span>
+                </div>
+                <div class="vg-ai-pending-wrap" id="vgAiPendingWrap" hidden>
+                  <img class="vg-ai-pending-thumb" id="vgAiPendingThumb" alt="" />
+                  <span class="vg-ai-pending-name" id="vgAiPendingName"></span>
+                  <button type="button" class="vg-ai-pending-remove" id="vgAiPendingRemove" aria-label="Убрать вложение">×</button>
+                </div>
+                <div class="vg-ai-input-row">
+                  <div class="vg-ai-mic-stack" id="vgAiMicStack">
+                    <button type="button" class="vg-ai-tool-btn" id="vgAiMicBtn" title="Голосовое сообщение" aria-label="Записать голосовое сообщение">
+                      <img id="vgAiMicImg" class="vg-ai-tool-img" src="/pictures/technical/micro.png" alt="" width="28" height="28" decoding="async" />
+                    </button>
+                    <span class="vg-ai-rec-pulse" id="vgAiRecPulse" aria-hidden="true"></span>
+                  </div>
+                  <button type="button" class="vg-ai-tool-btn" id="vgAiAttachBtn" title="Прикрепить фото или видео" aria-label="Прикрепить файл">
+                    <img id="vgAiAttachImg" class="vg-ai-tool-img" src="/pictures/technical/doc.png" alt="" width="28" height="28" decoding="async" />
+                  </button>
+                  <input type="file" id="vgAiFileInput" class="vg-ai-file-input" accept=".jpg,.jpeg,.png,.heic,.heif,.mp4,.mov,image/jpeg,image/png,image/heic,video/mp4,video/quicktime" />
+                  <label class="vg-ai-input-wrap" for="vgAiTextInput">
+                    <span class="vg-ai-sr-only">Текст сообщения</span>
+                    <textarea id="vgAiTextInput" class="vg-ai-textarea" rows="1" placeholder="Напишите вопрос" maxlength="8000"></textarea>
+                  </label>
+                  <button type="button" class="vg-ai-send-btn" id="vgAiSendBtn" title="Отправить" aria-label="Отправить сообщение">
+                    <span class="vg-ai-send-label">Отправить</span>
+                    <span class="vg-ai-send-arrow" aria-hidden="true">➤</span>
+                  </button>
+                </div>
+                <p class="vg-ai-disclaimer">ИИ не заменяет визит к ветеринару. При угрозе жизни обращайтесь в клинику немедленно.</p>
+              </div>
+            </div>
+          </div>
+          <div class="vg-ai-col vg-ai-col--luna" aria-label="Наблюдение за состоянием питомца">
+            <figure class="vg-ai-luna-figure">
+              <img class="vg-ai-luna-img" src="/pictures/luna.png?v=1" alt="" width="900" height="600" decoding="async" />
+              <figcaption class="vg-ai-luna-overlay">
+                <div class="vg-ai-luna-rail">
+                <div class="vg-ai-luna-head">
+                  <span class="vg-ai-luna-line1">ОБРАТИТЕ ВНИМАНИЕ</span>
+                  <br class="vg-ai-luna-head-br" aria-hidden="true" />
+                  <span class="vg-ai-luna-line2">НА ВАШЕГО ПИТОМЦА</span>
+                </div>
+                <div class="vg-ai-luna-cards-wrap">
+                <div class="vg-ai-luna-mob-viewport" id="vgAiLunaViewport">
+                <ul class="vg-ai-luna-cards" id="vgAiLunaCards">
+                  <li class="vg-ai-check-item">
+                    <button type="button" class="vg-ai-check-inner">
+                      <span class="vg-ai-paw-wrap" aria-hidden="true">
+                        <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
+                        <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
+                      </span>
+                      <span class="vg-ai-check-text">
+                        <span class="vg-ai-check-short">Дыхание</span>
+                        <span class="vg-ai-check-long">В норме дыхание ровное и бесшумное (10–30 вдохов/мин), а учащённое, затруднённое, с хрипами или свистом — тревожный знак.</span>
+                      </span>
+                    </button>
+                  </li>
+                  <li class="vg-ai-check-item">
+                    <button type="button" class="vg-ai-check-inner">
+                      <span class="vg-ai-paw-wrap" aria-hidden="true">
+                        <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
+                        <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
+                      </span>
+                      <span class="vg-ai-check-text">
+                        <span class="vg-ai-check-short">Сознание и активность</span>
+                        <span class="vg-ai-check-long">В норме собака бодра и реагирует на вас, а вялость, заторможенность или, наоборот, беспокойное метание — повод насторожиться.</span>
+                      </span>
+                    </button>
+                  </li>
+                  <li class="vg-ai-check-item">
+                    <button type="button" class="vg-ai-check-inner">
+                      <span class="vg-ai-paw-wrap" aria-hidden="true">
+                        <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
+                        <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
+                      </span>
+                      <span class="vg-ai-check-text">
+                        <span class="vg-ai-check-short">Аппетит и жажда</span>
+                        <span class="vg-ai-check-long">В норме ест и пьёт как обычно; отказ от еды >24 часов или постоянная жажда — тревога.</span>
+                      </span>
+                    </button>
+                  </li>
+                  <li class="vg-ai-check-item">
+                    <button type="button" class="vg-ai-check-inner">
+                      <span class="vg-ai-paw-wrap" aria-hidden="true">
+                        <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
+                        <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
+                      </span>
+                      <span class="vg-ai-check-text">
+                        <span class="vg-ai-check-short">Шерсть</span>
+                        <span class="vg-ai-check-long">В норме гладкая и блестящая; тусклая, взъерошенная, с проплешинами — возможны проблемы.</span>
+                      </span>
+                    </button>
+                  </li>
+                  <li class="vg-ai-check-item">
+                    <button type="button" class="vg-ai-check-inner">
+                      <span class="vg-ai-paw-wrap" aria-hidden="true">
+                        <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
+                        <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
+                      </span>
+                      <span class="vg-ai-check-text">
+                        <span class="vg-ai-check-short">Поведение</span>
+                        <span class="vg-ai-check-long">В норме ведёт себя привычно; агрессия, скулёж, желание спрятаться — повод проверить.</span>
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+                </div>
+                <div class="vg-ai-luna-mob-nav" id="vgAiLunaNav" hidden>
+                  <button type="button" class="vg-ai-luna-mob-arrow" id="vgAiLunaPrev" aria-label="Предыдущий пункт">‹</button>
+                  <button type="button" class="vg-ai-luna-mob-arrow" id="vgAiLunaNext" aria-label="Следующий пункт">›</button>
+                </div>
+                </div>
+                </div>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Быстрый опрос состояния питомца -->
-    <section class="quick-check-section" id="quickCheckSection">
+    <section class="quick-check-section vg-scroll-reveal" id="quickCheckSection">
       <div class="quick-check-header">
         <h2 class="quick-check-title">
           ПРОЙДИТЕ ТЕСТ И ПОЛУЧИТЕ ОЦЕНКУ ЗДОРОВЬЯ ВАШЕГО ПИТОМЦА
@@ -297,7 +433,7 @@
     </div>
 
     <!-- Секция ветклиник -->
-    <section class="clinics-section" id="clinicsSection">
+    <section class="clinics-section vg-scroll-reveal" id="clinicsSection">
       <h2>ВЕТЕРИНАРНЫЕ КЛИНИКИ В ТВОЕМ ГОРОДЕ</h2>
       <div class="clinics-layout">
         <div id="yandexMap" class="yandex-map-container"></div>
@@ -312,8 +448,43 @@
       </div>
     </section>
 
+    <footer class="footer-info-wrap vg-scroll-reveal">
+      <div class="footer-grid">
+        <div class="footer-col footer-col--brand">
+          <div class="footer-brand-top">
+            <img src="/pictures/new_logo.png" alt="" class="footer-logo" width="56" height="56">
+            <div class="footer-brand-text">
+              <p class="footer-brand-name">VetGuardian</p>
+              <p class="footer-brand-desc">Ваш персональный AI-ассистент ветеринарной помощи</p>
+            </div>
+          </div>
+        </div>
+        <div class="footer-col footer-col--nav">
+          <h3 class="footer-col-title">РАЗДЕЛЫ</h3>
+          <nav class="footer-nav" aria-label="Разделы сайта">
+            <button type="button" class="footer-nav-btn" data-action="analysis">Обследование</button>
+            <button type="button" class="footer-nav-btn" data-action="clinics">Ветклиники</button>
+            <button type="button" class="footer-nav-btn" data-action="breeds">Узнать питомца лучше</button>
+            <button type="button" class="footer-nav-btn" data-action="quick-check">Проверь питомца</button>
+            <button type="button" class="footer-nav-btn" data-action="ai-chat">Поддержка</button>
+            <button type="button" class="footer-nav-btn" data-action="cabinet">Личный кабинет</button>
+          </nav>
+        </div>
+        <div class="footer-col footer-col--about">
+          <h3 class="footer-col-title">О САЙТЕ</h3>
+          <p class="footer-about-text">
+            email / поддержка:<br>
+            <a href="mailto:mierrored@gmail.com">mierrored@gmail.com</a>
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>2026 VetGuardian</span>
+      </div>
+    </footer>
+
     <!-- История обращений -->
-    <section class="history-section">
+    <section class="history-section vg-scroll-reveal">
       <h3>История</h3>
       <div class="history-strip" id="historyStrip">
         <span class="history-empty" id="historyEmpty">Пока обращений нет. Пройдите опрос «Начать анамнез».</span>
@@ -702,8 +873,7 @@
         <div class="cabinet-photo-wrap">
           <img src="https://s.fotora.ru/0e7c61dbf76dff54.jpeg" alt="Питомец" class="cabinet-photo">
         </div>
-        <p class="cabinet-field">Имя: <span id="cabinetPetName">—</span></p>
-        <p class="cabinet-field">Порода: <span id="cabinetPetBreed">—</span></p>
+        <p class="cabinet-field">Кличка: <span id="cabinetPetName">—</span></p>
         <p class="cabinet-field">Email: <span id="cabinetEmail">—</span></p>
       </div>
       <div class="cabinet-passport-right">
@@ -766,23 +936,7 @@
     </div>
   </div>
 
-  <!-- Нижний информационный блок -->
-  <section class="footer-info-wrap">
-    <div class="footer-card">
-      <div class="footer-card-left">
-        <h2 class="footer-title">VetGuardian</h2>
-        <p class="footer-subtitle">
-          AI‑ассистент для первичной оценки состояния питомца и подготовки к визиту в клинику.
-        </p>
-        <p class="footer-contact-label">email / поддержка:</p>
-        <p class="footer-contact-value">mierrored@gmail.com</p>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>2026 VetGuardian</span>
-    </div>
-  </section>
-
-  <script src="/js/app.js?v=14"></script>
+  <script src="/js/app.js?v=18"></script>
+  <script src="/js/ai-assistant.js?v=2"></script>
 </body>
 </html>

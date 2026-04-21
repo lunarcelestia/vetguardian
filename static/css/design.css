@@ -62,6 +62,31 @@ body::before {
   display: none;
 }
 
+/* Плавное появление секций при прокрутке */
+.vg-scroll-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.vg-scroll-reveal.vg-scroll-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+}
+
 /* Шапка */
 .header {
   position: fixed;
@@ -114,11 +139,19 @@ body::before {
 
 .header-nav .nav-cabinet {
   padding: 6px;
+  overflow: visible;
 }
 .header-nav .nav-cabinet img {
   display: block;
   width: 42px;
   height: 42px;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+  transform-origin: center center;
+}
+.header-nav .nav-cabinet:hover img,
+.header-nav .nav-cabinet:focus-visible img {
+  transform: scale(1.1);
 }
 
 .header-right {
@@ -503,6 +536,56 @@ body::before {
   border-color: var(--sky-dark);
 }
 
+/* Опросник анамнеза: лапки paw / chosen_paw как в быстром тесте */
+.anamnesis-panel #questionnaireForm .radio-inline label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+.anamnesis-panel #questionnaireForm .radio-inline input[type="radio"],
+.anamnesis-panel #questionnaireForm .radio-inline input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: url("/pictures/technical/paw.png") center / contain no-repeat;
+  cursor: pointer;
+  accent-color: transparent;
+}
+.anamnesis-panel #questionnaireForm .radio-inline input[type="radio"]:checked,
+.anamnesis-panel #questionnaireForm .radio-inline input[type="checkbox"]:checked {
+  background-image: url("/pictures/technical/chosen_paw.png");
+  box-shadow: none;
+}
+.anamnesis-panel #questionnaireForm .radio-inline label:hover input:not(:checked) {
+  background-image: url("/pictures/technical/chosen_paw.png");
+}
+.anamnesis-panel #questionnaireForm .symptom-table input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto;
+  border: none;
+  border-radius: 0;
+  display: block;
+  background: url("/pictures/technical/paw.png") center / contain no-repeat;
+  cursor: pointer;
+}
+.anamnesis-panel #questionnaireForm .symptom-table input[type="radio"]:checked {
+  background-image: url("/pictures/technical/chosen_paw.png");
+}
+.anamnesis-panel #questionnaireForm .symptom-table td:not(:first-child) {
+  text-align: center;
+  vertical-align: middle;
+}
+
 /* Подвопросы раны — скрыты по умолчанию */
 .wound-sub { display: none; margin-top: 12px; padding-left: 8px; border-left: 3px solid var(--sky); }
 .wound-sub.visible { display: block; }
@@ -638,8 +721,8 @@ body::before {
   background: rgba(15, 23, 42, 0.9);
 }
 
-/* Секции главной (история и т.д.) */
-.main-content { padding-bottom: 60px; }
+/* Секции главной (история и т.д.) — без нижнего «зазора» под подвалом */
+.main-content { padding-bottom: 0; }
 
 .pet-info-section {
   margin-top: 2.5rem;
@@ -712,6 +795,8 @@ body::before {
   border-radius: 999px;
   border: 2px solid #374151;
   background: #ffffff;
+  transition: transform 0.22s ease, color 0.22s ease, background-color 0.22s ease, border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .pet-info-explore-btn {
@@ -758,6 +843,15 @@ body::before {
 .pet-info-card:hover img {
   transform: scale(1.08);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.3);
+}
+
+.pet-info-card:hover .pet-info-card-label,
+.pet-info-card:focus-visible .pet-info-card-label {
+  transform: scale(1.06);
+  color: #ffffff;
+  background: #7dd3fc;
+  border-color: #38bdf8;
+  box-shadow: 0 8px 22px rgba(14, 165, 233, 0.35);
 }
 
 /* Раздел «Статьи» — панели теперь внутри .pet-info-cards, стили заданы выше */
@@ -1581,9 +1675,13 @@ body::before {
   display: none !important;
 }
 .clinics-section {
+  position: relative;
+  z-index: 2;
+  isolation: isolate;
   margin-top: 2rem;
-  padding: 2.5rem 20px 1.5rem;
-  background: rgba(255,255,255,0.9);
+  margin-bottom: 0;
+  padding: 2.5rem 20px 1.25rem;
+  background: #ffffff;
   border-radius: 24px;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.2);
 }
@@ -1646,49 +1744,134 @@ body::before {
   }
 }
 
-/* Нижний информационный блок */
+/* Подвал: ниже клиник по слою (z-index), с отриц. margin — серый в нижних скруглениях белой карточки */
 .footer-info-wrap {
-  background: hsla(0, 0%, 32%, 1);
-  padding: 38px 32px 30px;
-  margin-top: -40px;
+  position: relative;
+  z-index: 1;
+  background: hsl(220, 8%, 34%);
+  padding: 42px 32px 28px;
+  margin-top: -24px;
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.35);
 }
-.footer-card {
+
+.footer-grid {
   max-width: 1100px;
   margin: 0 auto;
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 24px 24px 20px;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.4);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px 40px;
+  align-items: start;
 }
-.footer-title {
-  font-size: 1.8rem;
+
+.footer-col--brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.footer-brand-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.footer-logo {
+  width: 56px;
+  height: auto;
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.footer-brand-text {
+  min-width: 0;
+}
+
+.footer-brand-name {
+  margin: 0 0 8px;
+  font-size: 1.55rem;
   font-weight: 800;
-  margin-bottom: 8px;
+  color: #f8fafc;
+  letter-spacing: 0.02em;
 }
-.footer-subtitle {
+
+.footer-brand-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(248, 250, 252, 0.88);
+  max-width: 300px;
+}
+
+.footer-col-title {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: rgba(248, 250, 252, 0.9);
+}
+
+.footer-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.footer-nav-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  color: rgba(248, 250, 252, 0.92);
+  font-family: var(--font);
   font-size: 0.98rem;
-  color: #4b5563;
-  max-width: 520px;
-}
-.footer-contact-label {
-  margin-top: 16px;
-  font-size: 0.9rem;
-  color: #9ca3af;
-}
-.footer-contact-value {
-  font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
+
+.footer-nav-btn:hover {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.footer-about-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(248, 250, 252, 0.88);
+}
+
+.footer-about-text a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.footer-about-text a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .footer-bottom {
   max-width: 1100px;
-  margin: 18px auto 0;
-  border-top: 1px solid rgba(229, 231, 235, 0.5);
-  padding-top: 10px;
-  color: #e5e7eb;
-  font-size: 0.9rem;
+  margin: 28px auto 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  padding-top: 14px;
+  color: rgba(248, 250, 252, 0.72);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
 }
 
 /* Планшеты и узкие окна: сетки и контент без изменения десктопного макета */
@@ -2108,19 +2291,22 @@ body::before {
 }
 
 .quick-check-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  border: 2px solid #9ca3af;
-  background: transparent;
+  width: 26px;
+  height: 26px;
+  border-radius: 0;
+  border: none;
+  background: url("/pictures/technical/paw.png") center / contain no-repeat;
   flex: 0 0 auto;
-  margin-top: 2px;
+  margin-top: 0;
+}
+
+.quick-check-option:hover input:not(:checked) + .quick-check-dot {
+  background-image: url("/pictures/technical/chosen_paw.png");
 }
 
 .quick-check-option input:checked + .quick-check-dot {
-  border-color: var(--sky-dark);
-  background: var(--sky-dark);
-  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+  background-image: url("/pictures/technical/chosen_paw.png");
+  box-shadow: none;
 }
 
 .quick-check-option-text {
@@ -2134,9 +2320,15 @@ body::before {
 
 .quick-check-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  align-items: center;
   gap: 12px;
   margin-top: auto;
+}
+
+/* «Назад» слева, «Далее» справа; на первом шаге «Назад» скрыт — «Далее» остаётся справа */
+.quick-check-back {
+  margin-right: auto;
 }
 
 .quick-check-btn {
@@ -2642,9 +2834,9 @@ body.quick-check-overlay-open {
   }
 
   .quick-check-dot {
-    width: 16px;
-    height: 16px;
-    margin-top: 1px;
+    width: 22px;
+    height: 22px;
+    margin-top: 0;
   }
 
   .quick-check-btn {
