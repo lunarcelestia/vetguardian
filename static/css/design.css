@@ -1,12 +1,10 @@
 /* VetGuardian — дизайн: фон #f9fdff, TT Days Sans, тёмно-синий текст */
+/* Локальные файлы: положите tt-days-sans.woff2 (и при необходимости .woff) в /static/fonts/ — без них браузер возьмёт запасной стек из --font. Внешний CDN убран: давал net::ERR_CONNECTION_RESET. */
 @font-face {
   font-family: "TT Days Sans";
-  /* сначала локальный файл из проекта, потом запасной внешний источник */
   src:
     url("/fonts/tt-days-sans.woff2") format("woff2"),
-    url("/fonts/tt-days-sans.woff") format("woff"),
-    url("https://db.onlinewebfonts.com/t/aa9ee4073ee729498a4ceea51e8df828.woff2") format("woff2"),
-    url("https://db.onlinewebfonts.com/t/aa9ee4073ee729498a4ceea51e8df828.woff") format("woff");
+    url("/fonts/tt-days-sans.woff") format("woff");
   font-weight: 400 700;
   font-style: normal;
   font-display: swap;

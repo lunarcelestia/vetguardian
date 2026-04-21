@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
   <link rel="stylesheet" href="/css/style.css?v=3">
-  <link rel="stylesheet" href="/css/design.css?v=13">
-  <link rel="stylesheet" href="/css/ai-assistant.css?v=7">
+  <link rel="stylesheet" href="/css/design.css?v=14">
+  <link rel="stylesheet" href="/css/ai-assistant.css?v=9">
   <link rel="icon" type="image/png" href="/pictures/new_logo.png">
   <link rel="apple-touch-icon" type="image/png" href="/pictures/new_logo.png">
     <!-- Chart.js для интерактивных графиков -->
@@ -283,7 +283,13 @@
           </div>
           <div class="vg-ai-col vg-ai-col--luna" aria-label="Наблюдение за состоянием питомца">
             <figure class="vg-ai-luna-figure">
-              <img class="vg-ai-luna-img" src="/pictures/luna.png?v=1" alt="" width="900" height="600" decoding="async" />
+              <picture>
+                <source
+                  type="image/png"
+                  media="(max-width: 768px), (max-width: 960px) and (orientation: portrait)"
+                  srcset="/pictures/luna_phone.png?v=1" />
+                <img class="vg-ai-luna-img" src="/pictures/luna.png?v=1" alt="" width="900" height="600" decoding="async" />
+              </picture>
               <figcaption class="vg-ai-luna-overlay">
                 <div class="vg-ai-luna-rail">
                 <div class="vg-ai-luna-head">

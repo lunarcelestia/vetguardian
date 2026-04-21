@@ -572,6 +572,11 @@
   box-shadow: 0 12px 40px rgba(14, 165, 233, 0.25);
 }
 
+/* <picture> не должен ломать absolute-раскладку img внутри figure */
+.vg-ai-luna-figure > picture {
+  display: contents;
+}
+
 .vg-ai-luna-img {
   position: absolute;
   inset: 0;
@@ -1058,21 +1063,21 @@
   }
 
   .vg-ai-check-inner {
-    font-size: clamp(0.68rem, 2.6vw, 0.82rem);
-    padding: 11px 11px;
-    min-height: 3.75rem;
-    gap: 9px;
-    border-radius: 14px;
+    font-size: clamp(0.62rem, 2.75vw, 0.78rem);
+    padding: 7px 9px;
+    min-height: 2.75rem;
+    gap: 6px;
+    border-radius: 11px;
   }
 
   .vg-ai-paw-wrap {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
   }
 
   .vg-ai-paw {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
   }
 
   .vg-ai-luna-cards {
@@ -1082,7 +1087,7 @@
   }
 
   .vg-ai-check-text {
-    min-height: 3.5rem;
+    min-height: 0;
   }
 
   .vg-ai-check-long {
@@ -1172,11 +1177,68 @@
     width: 20%;
     max-width: none;
     box-sizing: border-box;
-    padding: 6px 4px;
+    padding: 4px 3px;
     opacity: 1 !important;
     transform: none !important;
     transition: opacity 0.2s ease, transform 0.2s ease !important;
     transition-delay: 0ms !important;
+  }
+}
+
+/* Luna: ещё компактнее «прямоугольники» в портрете (узкая колонка поверх картинки) */
+@media (max-width: 960px) and (orientation: portrait) {
+  .vg-ai-check-inner {
+    padding: 7px 8px;
+    min-height: 2.45rem;
+    gap: 5px;
+    border-radius: 10px;
+    font-size: clamp(0.58rem, 2.95vw, 0.74rem);
+  }
+
+  .vg-ai-paw-wrap,
+  .vg-ai-paw {
+    width: 22px;
+    height: 22px;
+  }
+
+  .vg-ai-luna-cards {
+    gap: 5px;
+  }
+
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-check-inner {
+    padding: 5px 6px;
+    min-height: 2.15rem;
+    gap: 4px;
+    border-radius: 9px;
+    font-size: clamp(0.54rem, 3.1vw, 0.68rem);
+  }
+
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-paw-wrap,
+  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-paw {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* вторая строка заголовка чуть ближе к первой */
+  .vg-ai-luna-head-br {
+    margin: 0.02em 0 -0.14em;
+  }
+
+  .vg-ai-luna-line2 {
+    display: inline-block;
+    margin-top: -0.3em;
+  }
+}
+
+/* телефон в альбоме: та же подтяжка второй строки */
+@media (max-width: 768px) {
+  .vg-ai-luna-head-br {
+    margin: 0.02em 0 -0.12em;
+  }
+
+  .vg-ai-luna-line2 {
+    display: inline-block;
+    margin-top: -0.28em;
   }
 }
 
