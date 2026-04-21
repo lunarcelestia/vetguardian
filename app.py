@@ -43,6 +43,16 @@ def cursor_assets(filename: str):
 def index():
     return send_from_directory(app.static_folder, "index.html")
 
+
+@app.route("/static/<path:filename>")
+def static_prefixed(filename: str):
+    """Алиас /static/... → корень static/ (PWA: manifest, sw.js с scope '/')."""
+    resp = send_from_directory(app.static_folder, filename)
+    if filename == "sw.js" or filename.endswith("/sw.js"):
+        resp.headers["Service-Worker-Allowed"] = "/"
+    return resp
+
+
 @app.route("/<path:path>")
 def static_file(path):
     return send_from_directory(app.static_folder, path)

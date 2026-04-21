@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0ea5e9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VetGuardian">
   <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
+  <link rel="manifest" href="/static/manifest.json">
   <link rel="stylesheet" href="/css/style.css?v=3">
   <link rel="stylesheet" href="/css/design.css?v=14">
   <link rel="stylesheet" href="/css/ai-assistant.css?v=9">
@@ -944,5 +949,65 @@
 
   <script src="/js/app.js?v=18"></script>
   <script src="/js/ai-assistant.js?v=2"></script>
+  <script>
+    (function () {
+      window.addEventListener("load", function () {
+        if (!("serviceWorker" in navigator)) return;
+
+        var toast = null;
+        function showUpdateToast(registration) {
+          if (toast) return;
+          toast = document.createElement("div");
+          toast.setAttribute("role", "status");
+          toast.style.cssText =
+            "position:fixed;bottom:16px;left:16px;right:16px;max-width:420px;margin:0 auto;" +
+            "z-index:99999;padding:14px 16px;border-radius:12px;background:#0c1929;color:#fff;" +
+            "font-family:system-ui,sans-serif;font-size:14px;box-shadow:0 8px 32px rgba(0,0,0,.25);" +
+            "display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;";
+          var text = document.createElement("span");
+          text.textContent = "Готово обновление VetGuardian. Перезагрузите страницу, чтобы применить.";
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = "Обновить";
+          btn.style.cssText =
+            "padding:8px 14px;border-radius:8px;border:none;background:#38bdf8;color:#0c1929;" +
+            "font-weight:600;cursor:pointer;font-size:14px;";
+          btn.addEventListener("click", function () {
+            var w = registration.waiting;
+            if (w) w.postMessage({ type: "SKIP_WAITING" });
+            else window.location.reload();
+          });
+          toast.appendChild(text);
+          toast.appendChild(btn);
+          document.body.appendChild(toast);
+        }
+
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+
+        navigator.serviceWorker
+          .register("/static/sw.js", { scope: "/" })
+          .then(function (registration) {
+            if (registration.waiting) showUpdateToast(registration);
+            registration.addEventListener("updatefound", function () {
+              var nw = registration.installing;
+              if (!nw) return;
+              nw.addEventListener("statechange", function () {
+                if (nw.state === "installed" && navigator.serviceWorker.controller) {
+                  showUpdateToast(registration);
+                }
+              });
+            });
+          })
+          .catch(function (err) {
+            console.warn("[PWA] Service Worker registration failed:", err);
+          });
+      });
+    })();
+  </script>
 </body>
 </html>

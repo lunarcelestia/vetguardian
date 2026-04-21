@@ -1,0 +1,219 @@
+/* Офлайн-страница VetGuardian — в духе design.css */
+:root {
+  --bg: #ffffff;
+  --text: #0c1929;
+  --muted: #334155;
+  --sky: #38bdf8;
+  --sky-dark: #0ea5e9;
+  --pastel: #e0f2fe;
+  --radius: 12px;
+  --font: "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.offline-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+.offline-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--pastel);
+  color: var(--sky-dark);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+h1 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  color: var(--muted);
+  margin: 0 0 22px;
+  font-size: 1rem;
+}
+
+.offline-actions {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.offline-btn {
+  display: block;
+  width: 100%;
+  padding: 18px 20px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.offline-btn:active {
+  transform: scale(0.98);
+}
+
+.offline-btn-primary {
+  background: linear-gradient(135deg, var(--sky) 0%, var(--sky-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.35);
+}
+
+.offline-btn-secondary {
+  background: var(--pastel);
+  color: var(--text);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+}
+
+.panel {
+  display: none;
+  animation: fadeIn 0.25s ease;
+}
+
+.panel.is-open {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ref-block {
+  background: #f8fafc;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  border-left: 4px solid var(--sky-dark);
+}
+
+.ref-block h2 {
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.ref-block p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.test-q {
+  margin-bottom: 18px;
+}
+
+.test-q label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.test-q select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 1rem;
+  background: #fff;
+}
+
+.test-submit {
+  margin-top: 8px;
+  padding: 14px 20px;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--sky-dark);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.test-result {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: var(--radius);
+  display: none;
+}
+
+.test-result.is-visible {
+  display: block;
+}
+
+.test-result.level-low {
+  background: #ecfdf5;
+  border: 1px solid #22c55e;
+}
+
+.test-result.level-mid {
+  background: #fefce8;
+  border: 1px solid #eab308;
+}
+
+.test-result.level-high {
+  background: #fef2f2;
+  border: 1px solid #ef4444;
+}
+
+.test-result h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.test-result p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.back-row {
+  margin-top: 20px;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  color: var(--sky-dark);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.95rem;
+  text-decoration: underline;
+}
+
+.footer-note {
+  margin-top: 32px;
+  font-size: 0.85rem;
+  color: #64748b;
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0ea5e9">
+  <title>VetGuardian — офлайн</title>
+  <link rel="stylesheet" href="/css/offline.css">
+  <link rel="icon" type="image/png" href="/pictures/new_logo.png">
+</head>
+<body>
+  <div class="offline-wrap">
+    <div id="panelHome" class="panel is-open">
+      <span class="offline-badge">Офлайн</span>
+      <h1>VetGuardian (офлайн-режим)</h1>
+      <p class="lead">Нет интернета, но вы можете воспользоваться справочником и быстрым тестом.</p>
+      <div class="offline-actions">
+        <button type="button" class="offline-btn offline-btn-primary" id="btnOpenRef">Справочник</button>
+        <button type="button" class="offline-btn offline-btn-secondary" id="btnOpenTest">Быстрый тест</button>
+      </div>
+    </div>
+
+    <div id="panelRef" class="panel">
+      <button type="button" class="back-link" id="btnBackFromRef">← На главную офлайн</button>
+      <h1 style="margin-top:16px">Справочник первой помощи</h1>
+      <p class="lead">Краткие шаги до ветеринара. Это не диагноз и не лечение.</p>
+
+      <article class="ref-block">
+        <h2>Кровотечение</h2>
+        <p>Надавите стерильной салфеткой или чистой тканью на рану 5–10 минут. При сильном кровотечении наложите жгут выше раны только на конечности и снимите его через 15–20 минут, отметив время. Не вводите в рану порошки. Везите в клинику.</p>
+      </article>
+      <article class="ref-block">
+        <h2>Остановка дыхания</h2>
+        <p>Проверьте проходимость рта, уберите инородное тело осторожно. Если нет дыхания и пульса — начинайте СЛР по ветеринарному протоколу и одновременно вызывайте клинику. Держите питомца тёплым при поездке.</p>
+      </article>
+      <article class="ref-block">
+        <h2>Отравление</h2>
+        <p>Не вызывайте рвоту без указания врача. Сохраните упаковку вещества. Не давайте молоко «от всего». При судорогах или слабости — срочно в клинику. При поездке минимизируйте стресс.</p>
+      </article>
+      <article class="ref-block">
+        <h2>Тепловой удар</h2>
+        <p>Уберите в тень, обмахивайте, увлажняйте лапы и уши прохладной (не ледяной) водой. Предложите пить понемногу. Не купайте в ледяной воде. Срочно к врачу — внутренние повреждения возможны даже после «улучшения».</p>
+      </article>
+      <article class="ref-block">
+        <h2>Судороги</h2>
+        <p>Не держите язык руками. Уберите опасные предметы, приглушите свет и звук. Засекайте длительность и число приступов. После приступа ведите к врачу; если приступ дольше 5 минут или повторяется — немедленно в клинику.</p>
+      </article>
+    </div>
+
+    <div id="panelTest" class="panel">
+      <button type="button" class="back-link" id="btnBackFromTest">← На главную офлайн</button>
+      <h1 style="margin-top:16px">Быстрый тест</h1>
+      <p class="lead">Ответьте на вопросы — оценка ориентировочная, только для решения «ехать сейчас или нет».</p>
+
+      <form id="quickTestForm">
+        <div class="test-q">
+          <label for="qBreath">Дыхание</label>
+          <select id="qBreath" name="breath">
+            <option value="0">Ровное, без хрипов</option>
+            <option value="1">Чуть чаще обычного</option>
+            <option value="2">Затруднённое, хрипы, кашель</option>
+          </select>
+        </div>
+        <div class="test-q">
+          <label for="qMind">Сознание и реакция</label>
+          <select id="qMind" name="mind">
+            <option value="0">Бодрый, ориентируется</option>
+            <option value="1">Вялый, но откликается</option>
+            <option value="2">Не откликается или судороги</option>
+          </select>
+        </div>
+        <div class="test-q">
+          <label for="qBleed">Кровотечение</label>
+          <select id="qBleed" name="bleed">
+            <option value="0">Нет заметного кровотечения</option>
+            <option value="1">Небольшая капля / слюна с кровью</option>
+            <option value="2">Сильное или не останавливается</option>
+          </select>
+        </div>
+        <div class="test-q">
+          <label for="qGi">Рвота или жидкий стул</label>
+          <select id="qGi" name="gi">
+            <option value="0">Нет или единично</option>
+            <option value="1">Несколько раз за сутки</option>
+            <option value="2">Часто, с кровью, или не пьёт воду</option>
+          </select>
+        </div>
+        <div class="test-q">
+          <label for="qPain">Боль (реакция на прикосновение)</label>
+          <select id="qPain" name="pain">
+            <option value="0">Спокойно переносит осмотр</option>
+            <option value="1">Напрягается, отстраняется</option>
+            <option value="2">Визг, агрессия, нельзя тронуть</option>
+          </select>
+        </div>
+        <button type="submit" class="test-submit">Показать оценку</button>
+      </form>
+
+      <div id="testResult" class="test-result" role="status">
+        <h3 data-result-title></h3>
+        <p data-result-body></p>
+      </div>
+    </div>
+
+    <p class="footer-note">Полный сайт, ИИ и карты доступны при подключении к интернету.</p>
+  </div>
+  <script src="/js/offline.js"></script>
+</body>
+</html>
