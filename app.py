@@ -44,6 +44,16 @@ def index():
     return send_from_directory(app.static_folder, "index.html")
 
 
+@app.route("/sw.js")
+def service_worker():
+    """PWA: URL в корне — scope '/' без заголовка Service-Worker-Allowed (совместимо с nginx static)."""
+    return send_from_directory(
+        app.static_folder,
+        "sw.js",
+        mimetype="application/javascript",
+    )
+
+
 @app.route("/static/<path:filename>")
 def static_prefixed(filename: str):
     """Алиас /static/... → корень static/ (PWA: manifest, sw.js с scope '/')."""

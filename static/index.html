@@ -989,8 +989,7 @@
           window.location.reload();
         });
 
-        navigator.serviceWorker
-          .register("/static/sw.js", { scope: "/" })
+        navigator.serviceWorker.register("/sw.js", { scope: "/" })
           .then(function (registration) {
             if (registration.waiting) showUpdateToast(registration);
             registration.addEventListener("updatefound", function () {
