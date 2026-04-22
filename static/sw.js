@@ -1,18 +1,22 @@
 /* VetGuardian Service Worker — shell + network-first, API без кеша */
-const CACHE_NAME = "vetguardian-v2";
+const CACHE_NAME = "vetguardian-v3";
 
 const PRECACHE_URLS = [
   "/",
   "/index.html",
   "/offline.html",
   "/css/style.css?v=3",
-  "/css/design.css?v=14",
-  "/css/ai-assistant.css?v=9",
-  "/css/offline.css",
-  "/js/app.js?v=18",
+  "/css/design.css?v=15",
+  "/css/ai-assistant.css?v=10",
+  "/css/offline.css?v=2",
+  "/js/app.js?v=19",
   "/js/ai-assistant.js?v=2",
-  "/js/offline.js",
+  "/js/knowledge_match.js?v=1",
+  "/js/offline.js?v=4",
+  "/js/veterinary_knowledge_offline.json",
   "/pictures/new_logo.png",
+  "/pictures/new_logo_without_text.png",
+  "/pictures/paw.png",
   "/static/manifest.json",
 ];
 

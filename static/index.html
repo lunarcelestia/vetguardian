@@ -10,8 +10,8 @@
   <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
   <link rel="manifest" href="/static/manifest.json">
   <link rel="stylesheet" href="/css/style.css?v=3">
-  <link rel="stylesheet" href="/css/design.css?v=14">
-  <link rel="stylesheet" href="/css/ai-assistant.css?v=9">
+  <link rel="stylesheet" href="/css/design.css?v=15">
+  <link rel="stylesheet" href="/css/ai-assistant.css?v=10">
   <link rel="icon" type="image/png" href="/pictures/new_logo.png">
   <link rel="apple-touch-icon" type="image/png" href="/pictures/new_logo.png">
     <!-- Chart.js для интерактивных графиков -->
@@ -67,6 +67,9 @@
           <p class="hero-banner-subtitle">Ваш персональный AI-ассистент ветеринарной помощи</p>
           <div class="hero-actions">
             <button type="button" class="btn-start" id="anamnesisTrigger">Начать анализ</button>
+            <p class="hero-offline-hint" id="heroOfflineHint">
+              Наш сайт также работает оффлайн — <button type="button" class="hero-offline-link" id="pwaInstallModalOpen">см. инструкцию</button>
+            </p>
           </div>
         </div>
       </div>
@@ -306,64 +309,89 @@
                 <div class="vg-ai-luna-mob-viewport" id="vgAiLunaViewport">
                 <ul class="vg-ai-luna-cards" id="vgAiLunaCards">
                   <li class="vg-ai-check-item">
-                    <button type="button" class="vg-ai-check-inner">
+                    <button type="button" class="vg-ai-check-toggle" aria-expanded="false">
                       <span class="vg-ai-paw-wrap" aria-hidden="true">
                         <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
                         <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
                       </span>
-                      <span class="vg-ai-check-text">
+                      <span class="vg-ai-check-title-row">
                         <span class="vg-ai-check-short">Дыхание</span>
-                        <span class="vg-ai-check-long">В норме дыхание ровное и бесшумное (10–30 вдохов/мин), а учащённое, затруднённое, с хрипами или свистом — тревожный знак.</span>
+                        <span class="vg-ai-check-chevron" aria-hidden="true"></span>
                       </span>
                     </button>
+                    <div class="vg-ai-check-drawer" aria-hidden="true">
+                      <div class="vg-ai-check-drawer-inner">
+                        <p class="vg-ai-check-long">В норме дыхание ровное и бесшумное (10–30 вдохов/мин), а учащённое, затруднённое, с хрипами или свистом — тревожный знак.</p>
+                      </div>
+                    </div>
                   </li>
                   <li class="vg-ai-check-item">
-                    <button type="button" class="vg-ai-check-inner">
+                    <button type="button" class="vg-ai-check-toggle" aria-expanded="false">
                       <span class="vg-ai-paw-wrap" aria-hidden="true">
                         <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
                         <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
                       </span>
-                      <span class="vg-ai-check-text">
+                      <span class="vg-ai-check-title-row">
                         <span class="vg-ai-check-short">Сознание и активность</span>
-                        <span class="vg-ai-check-long">В норме собака бодра и реагирует на вас, а вялость, заторможенность или, наоборот, беспокойное метание — повод насторожиться.</span>
+                        <span class="vg-ai-check-chevron" aria-hidden="true"></span>
                       </span>
                     </button>
+                    <div class="vg-ai-check-drawer" aria-hidden="true">
+                      <div class="vg-ai-check-drawer-inner">
+                        <p class="vg-ai-check-long">В норме собака бодра и реагирует на вас, а вялость, заторможенность или, наоборот, беспокойное метание — повод насторожиться.</p>
+                      </div>
+                    </div>
                   </li>
                   <li class="vg-ai-check-item">
-                    <button type="button" class="vg-ai-check-inner">
+                    <button type="button" class="vg-ai-check-toggle" aria-expanded="false">
                       <span class="vg-ai-paw-wrap" aria-hidden="true">
                         <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
                         <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
                       </span>
-                      <span class="vg-ai-check-text">
+                      <span class="vg-ai-check-title-row">
                         <span class="vg-ai-check-short">Аппетит и жажда</span>
-                        <span class="vg-ai-check-long">В норме ест и пьёт как обычно; отказ от еды >24 часов или постоянная жажда — тревога.</span>
+                        <span class="vg-ai-check-chevron" aria-hidden="true"></span>
                       </span>
                     </button>
+                    <div class="vg-ai-check-drawer" aria-hidden="true">
+                      <div class="vg-ai-check-drawer-inner">
+                        <p class="vg-ai-check-long">В норме ест и пьёт как обычно; отказ от еды &gt;24 часов или постоянная жажда — тревога.</p>
+                      </div>
+                    </div>
                   </li>
                   <li class="vg-ai-check-item">
-                    <button type="button" class="vg-ai-check-inner">
+                    <button type="button" class="vg-ai-check-toggle" aria-expanded="false">
                       <span class="vg-ai-paw-wrap" aria-hidden="true">
                         <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
                         <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
                       </span>
-                      <span class="vg-ai-check-text">
+                      <span class="vg-ai-check-title-row">
                         <span class="vg-ai-check-short">Шерсть</span>
-                        <span class="vg-ai-check-long">В норме гладкая и блестящая; тусклая, взъерошенная, с проплешинами — возможны проблемы.</span>
+                        <span class="vg-ai-check-chevron" aria-hidden="true"></span>
                       </span>
                     </button>
+                    <div class="vg-ai-check-drawer" aria-hidden="true">
+                      <div class="vg-ai-check-drawer-inner">
+                        <p class="vg-ai-check-long">В норме гладкая и блестящая; тусклая, взъерошенная, с проплешинами — возможны проблемы.</p>
+                      </div>
+                    </div>
                   </li>
                   <li class="vg-ai-check-item">
-                    <button type="button" class="vg-ai-check-inner">
+                    <button type="button" class="vg-ai-check-toggle" aria-expanded="false">
                       <span class="vg-ai-paw-wrap" aria-hidden="true">
                         <img class="vg-ai-paw vg-ai-paw--off" src="/pictures/technical/paw.png" alt="" width="34" height="34" decoding="async" />
                         <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
                       </span>
-                      <span class="vg-ai-check-text">
+                      <span class="vg-ai-check-title-row">
                         <span class="vg-ai-check-short">Поведение</span>
-                        <span class="vg-ai-check-long">В норме ведёт себя привычно; агрессия, скулёж, желание спрятаться — повод проверить.</span>
+                        <span class="vg-ai-check-chevron" aria-hidden="true"></span>
                       </span>
                     </button>
+                    <div class="vg-ai-check-drawer" aria-hidden="true">
+                      <div class="vg-ai-check-drawer-inner">
+                        <p class="vg-ai-check-long">В норме ведёт себя привычно; агрессия, скулёж, желание спрятаться — повод проверить.</p>
+                      </div>
+                    </div>
                   </li>
                 </ul>
                 </div>
@@ -501,6 +529,22 @@
         <span class="history-empty" id="historyEmpty">Пока обращений нет. Пройдите опрос «Начать анамнез».</span>
       </div>
     </section>
+
+    <!-- Модальное окно: установка PWA / офлайн -->
+    <div class="pwa-install-modal-overlay" id="pwaInstallModal" aria-hidden="true">
+      <div class="pwa-install-modal" role="dialog" aria-modal="true" aria-labelledby="pwaInstallModalTitle">
+        <button type="button" class="pwa-install-modal-close" id="pwaInstallModalClose" aria-label="Закрыть">×</button>
+        <h2 class="pwa-install-modal-title" id="pwaInstallModalTitle">Инструкция по установке сайта-приложения VetGuardian</h2>
+        <ul class="pwa-install-modal-list">
+          <li><img src="/static/pictures/paw.png" alt="" width="22" height="22" decoding="async" /> Откройте сайт VetGuardian в браузере на телефоне.</li>
+          <li><img src="/static/pictures/paw.png" alt="" width="22" height="22" decoding="async" /> Нажмите на иконку «Поделиться» (на iPhone) или «Меню» (на Android).</li>
+          <li><img src="/static/pictures/paw.png" alt="" width="22" height="22" decoding="async" /> Выберите «На экран "Домой"» или «Установить приложение».</li>
+          <li><img src="/static/pictures/paw.png" alt="" width="22" height="22" decoding="async" /> Подтвердите название и нажмите «Добавить».</li>
+          <li><img src="/static/pictures/paw.png" alt="" width="22" height="22" decoding="async" /> Теперь приложение доступно с главного экрана и работает офлайн (справочник и быстрый тест).</li>
+        </ul>
+        <p class="pwa-install-modal-note">После установки можно пользоваться офлайн-справочником и тестом для оценки состояния питомца без интернета.</p>
+      </div>
+    </div>
 
     <!-- Модальное окно опросника -->
     <div class="anamnesis-overlay" id="anamnesisOverlay">
@@ -947,7 +991,7 @@
     </div>
   </div>
 
-  <script src="/js/app.js?v=18"></script>
+  <script src="/js/app.js?v=19"></script>
   <script src="/js/ai-assistant.js?v=2"></script>
   <script>
     (function () {

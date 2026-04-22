@@ -193,6 +193,62 @@
   const anamnesisTrigger = document.getElementById("anamnesisTrigger");
   if (anamnesisTrigger) anamnesisTrigger.addEventListener("click", function (e) { e.preventDefault(); openAnamnesisModal(); });
 
+  // ——— Модальное окно: офлайн / установка PWA ———
+  (function initPwaInstallModal() {
+    var overlay = document.getElementById("pwaInstallModal");
+    var openBtn = document.getElementById("pwaInstallModalOpen");
+    var closeBtn = document.getElementById("pwaInstallModalClose");
+    if (!overlay) return;
+
+    function openModal() {
+      overlay.classList.add("open");
+      overlay.setAttribute("aria-hidden", "false");
+      document.body.classList.add("body-locked");
+    }
+
+    function closeModal() {
+      overlay.classList.remove("open");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("body-locked");
+    }
+
+    if (openBtn) {
+      openBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        openModal();
+      });
+    }
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+    });
+  })();
+
+  // ——— Luna: раскрытие подсказок по клику ———
+  (function initLunaCheckAccordion() {
+    try {
+      var list = document.getElementById("vgAiLunaCards");
+      if (!list) return;
+      list.addEventListener("click", function (e) {
+        var btn = e.target.closest(".vg-ai-check-toggle");
+        if (!btn || !list.contains(btn)) return;
+        e.preventDefault();
+        var item = btn.closest(".vg-ai-check-item");
+        if (!item) return;
+        var drawer = item.querySelector(".vg-ai-check-drawer");
+        var expanded = !item.classList.contains("is-expanded");
+        item.classList.toggle("is-expanded", expanded);
+        btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+        if (drawer) drawer.setAttribute("aria-hidden", expanded ? "false" : "true");
+      });
+    } catch (err) {
+      console.error("Luna accordion init error:", err);
+    }
+  })();
+
   if (document.getElementById("btnToExtra")) document.getElementById("btnToExtra").addEventListener("click", function () {
     if (totalQuestionBlocks > 0 && currentQuestionBlock < totalQuestionBlocks) {
       currentQuestionBlock += 1;
