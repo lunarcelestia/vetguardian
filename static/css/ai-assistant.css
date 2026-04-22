@@ -1257,7 +1257,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 12px 44px 14px;
+    padding: 10px 34px 12px;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -1267,7 +1267,7 @@
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
-    width: 44px;
+    width: 34px;
     height: 48px;
     margin: 0;
     padding: 0;
@@ -1288,11 +1288,15 @@
   }
 
   .vg-ai-luna-slide-arrow--prev {
-    left: 2px;
+    left: 0;
+    justify-content: flex-start;
+    padding-left: 1px;
   }
 
   .vg-ai-luna-slide-arrow--next {
-    right: 2px;
+    right: 0;
+    justify-content: flex-end;
+    padding-right: 1px;
   }
 
   .vg-ai-luna-slide-arrow:disabled {
@@ -1301,13 +1305,13 @@
   }
 
   .vg-ai-luna-slide-title {
-    margin: 0 0 8px;
+    margin: 0 0 5px;
     flex: 0 0 auto;
-    font-size: clamp(0.98rem, 3.6vw, 1.15rem);
+    font-size: clamp(0.82rem, 3.05vw, 0.98rem);
     font-weight: 800;
     color: #0284c7;
     font-family: var(--font, "TT Days Sans", sans-serif);
-    line-height: 1.2;
+    line-height: 1.15;
   }
 
   .vg-ai-luna-slide-text {
