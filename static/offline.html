@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0ea5e9">
   <title>Офлайн VetGuardian</title>
-  <link rel="stylesheet" href="/css/offline.css?v=2">
+  <link rel="stylesheet" href="/css/offline.css?v=3">
   <link rel="icon" type="image/png" href="/pictures/new_logo.png">
 </head>
 <body>
@@ -16,11 +16,15 @@
       <div class="offline-logo-wrap">
         <img src="/pictures/new_logo_without_text.png" alt="VetGuardian" class="offline-logo" width="120" height="120" decoding="async">
       </div>
-      <p class="lead offline-lead">Справочник первой помощи и быстрый тест по той же базе знаний, что и на основном сайте (без ИИ и без сети после загрузки страницы).</p>
-      <div class="offline-actions offline-actions-hero">
+      <p class="lead offline-lead">Нет подключения к интернету. Открыта офлайн-версия сайта.</p>
+      <div class="offline-actions offline-actions-hero offline-actions-three">
         <button type="button" class="offline-btn offline-btn-primary" id="btnOpenRef">Справочник</button>
         <button type="button" class="offline-btn offline-btn-secondary" id="btnOpenTest">Быстрый тест</button>
+        <button type="button" class="offline-btn offline-btn-secondary" id="btnOpenClinics">Ветеринарные клиники</button>
       </div>
+      <p class="offline-legal-note">
+        Материалы офлайн-режима носят справочный характер, не заменяют очный осмотр ветеринара и не являются медицинской услугой. Адреса и телефоны клиник могут меняться — уточняйте на официальных сайтах. Сервис не несёт ответственности за решения, принятые только на основе этой страницы.
+      </p>
     </div>
 
     <div id="panelRef" class="panel">
@@ -203,6 +207,26 @@
       <p class="footer-note">Полный сайт, ИИ и карты доступны при подключении к интернету.</p>
     </div>
 
+    <div id="panelClinics" class="panel">
+      <button type="button" class="back-link" id="btnBackFromClinics">← На главную офлайн</button>
+
+      <div id="clinicsCityStep" class="offline-clinics-step">
+        <h2 class="offline-test-title">Ветеринарные клиники</h2>
+        <p class="lead offline-clinics-lead">Выберите город</p>
+        <div class="offline-clinics-city-btns">
+          <button type="button" class="offline-btn offline-btn-primary" data-offline-city="spb">Санкт-Петербург</button>
+          <button type="button" class="offline-btn offline-btn-secondary" data-offline-city="msk">Москва</button>
+        </div>
+      </div>
+
+      <div id="clinicsListStep" class="offline-clinics-step" hidden>
+        <button type="button" class="back-link" id="btnClinicsChangeCity">← Сменить город</button>
+        <p class="offline-clinics-hotline" id="clinicsHotline" role="status"></p>
+        <nav class="offline-clinics-district-nav" id="clinicsDistrictNav" aria-label="Районы"></nav>
+        <div id="clinicsDistrictBlocks" class="offline-clinics-blocks"></div>
+      </div>
+    </div>
+
     <div id="panelTest" class="panel">
       <button type="button" class="back-link" id="btnBackFromTest">← На главную офлайн</button>
 
@@ -233,6 +257,6 @@
   </div>
 
   <script src="/js/knowledge_match.js?v=1"></script>
-  <script src="/js/offline.js?v=4"></script>
+  <script src="/js/offline.js?v=7"></script>
 </body>
 </html>

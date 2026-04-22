@@ -2289,76 +2289,89 @@
     });
   }
 
-  // ——— Luna: карусель чек-листа на вертикальных узких экранах ———
-  (function initLunaChecklistCarousel() {
+  // ——— Luna: мобильный портрет — карточка с текстом и стрелками по бокам; иначе — аккордеон в списке ———
+  (function initLunaMobileSlides() {
     try {
       var wrap = document.querySelector(".vg-ai-luna-cards-wrap");
       var viewport = document.getElementById("vgAiLunaViewport");
       var list = document.getElementById("vgAiLunaCards");
       var nav = document.getElementById("vgAiLunaNav");
-      var prevBtn = document.getElementById("vgAiLunaPrev");
-      var nextBtn = document.getElementById("vgAiLunaNext");
-      if (!wrap || !viewport || !list || !nav || !prevBtn || !nextBtn) return;
+      var slideview = document.getElementById("vgAiLunaSlideview");
+      var titleEl = document.getElementById("vgAiLunaSlideTitle");
+      var textEl = document.getElementById("vgAiLunaSlideText");
+      var prevSlide = document.getElementById("vgAiLunaSlidePrev");
+      var nextSlide = document.getElementById("vgAiLunaSlideNext");
+      if (!wrap || !viewport || !list || !slideview || !titleEl || !textEl || !prevSlide || !nextSlide) return;
 
-      var items = list.querySelectorAll(".vg-ai-check-item");
-      var count = items.length;
-      if (!count) return;
-
+      var slides = [];
       var index = 0;
       var mq =
         window.matchMedia &&
         window.matchMedia("(max-width: 960px) and (orientation: portrait)");
 
-      function slidePercent() {
-        return 100 / count;
+      function collectSlides() {
+        slides = [];
+        list.querySelectorAll(".vg-ai-check-item").forEach(function (li) {
+          var st = li.querySelector(".vg-ai-check-short");
+          var lg = li.querySelector(".vg-ai-check-long");
+          slides.push({
+            title: st ? st.textContent.trim() : "",
+            text: lg ? lg.textContent.trim() : "",
+          });
+        });
       }
 
-      function applyTransform() {
-        var pct = slidePercent();
-        list.style.transform = "translateX(" + -index * pct + "%)";
+      function renderSlide() {
+        if (!slides.length) return;
+        index = Math.min(Math.max(0, index), slides.length - 1);
+        var s = slides[index];
+        titleEl.textContent = s.title || "";
+        textEl.textContent = s.text || "";
+        prevSlide.disabled = index <= 0;
+        nextSlide.disabled = index >= slides.length - 1;
+        slideview.setAttribute("aria-label", (s.title || "Пункт") + " " + String(index + 1) + " из " + String(slides.length));
       }
 
-      function updateArrows() {
-        prevBtn.disabled = index <= 0;
-        nextBtn.disabled = index >= count - 1;
+      function go(delta) {
+        if (!mq || !mq.matches) return;
+        index = Math.min(Math.max(0, index + delta), slides.length - 1);
+        renderSlide();
       }
 
       function setMode() {
         var on = mq && mq.matches;
         if (on) {
-          wrap.classList.add("vg-ai-luna-carousel--active");
-          nav.removeAttribute("hidden");
-          nav.setAttribute("aria-hidden", "false");
-          index = Math.min(Math.max(0, index), count - 1);
-          applyTransform();
-          updateArrows();
-        } else {
           wrap.classList.remove("vg-ai-luna-carousel--active");
-          nav.setAttribute("hidden", "");
-          nav.setAttribute("aria-hidden", "true");
+          wrap.classList.add("vg-ai-luna--slide-mode");
+          if (nav) {
+            nav.setAttribute("hidden", "");
+            nav.setAttribute("aria-hidden", "true");
+          }
+          list.style.transform = "";
+          collectSlides();
+          slideview.hidden = false;
+          renderSlide();
+        } else {
+          wrap.classList.remove("vg-ai-luna--slide-mode", "vg-ai-luna-carousel--active");
+          slideview.hidden = true;
+          if (nav) {
+            nav.setAttribute("hidden", "");
+            nav.setAttribute("aria-hidden", "true");
+          }
           list.style.transform = "";
           index = 0;
-          prevBtn.disabled = true;
-          nextBtn.disabled = false;
         }
       }
 
-      function go(delta) {
-        if (!mq || !mq.matches) return;
-        index = Math.min(Math.max(0, index + delta), count - 1);
-        applyTransform();
-        updateArrows();
-      }
-
-      prevBtn.addEventListener("click", function () {
+      prevSlide.addEventListener("click", function () {
         go(-1);
       });
-      nextBtn.addEventListener("click", function () {
+      nextSlide.addEventListener("click", function () {
         go(1);
       });
 
       var touchStartX = 0;
-      viewport.addEventListener(
+      slideview.addEventListener(
         "touchstart",
         function (e) {
           if (!mq || !mq.matches || !e.touches[0]) return;
@@ -2366,7 +2379,7 @@
         },
         { passive: true }
       );
-      viewport.addEventListener("touchend", function (e) {
+      slideview.addEventListener("touchend", function (e) {
         if (!mq || !mq.matches) return;
         var t = e.changedTouches && e.changedTouches[0];
         if (!t) return;
@@ -2383,7 +2396,7 @@
         window.setTimeout(setMode, 280);
       });
     } catch (err) {
-      console.error("Luna carousel init error:", err);
+      console.error("Luna mobile slides init error:", err);
     }
   })();
 

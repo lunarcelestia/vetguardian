@@ -8,8 +8,19 @@
   var panelHome = document.getElementById("panelHome");
   var panelRef = document.getElementById("panelRef");
   var panelTest = document.getElementById("panelTest");
+  var panelClinics = document.getElementById("panelClinics");
   var btnBackRef = document.getElementById("btnBackFromRef");
   var btnBackTest = document.getElementById("btnBackFromTest");
+  var btnOpenClinics = document.getElementById("btnOpenClinics");
+  var btnBackFromClinics = document.getElementById("btnBackFromClinics");
+  var clinicsCityStep = document.getElementById("clinicsCityStep");
+  var clinicsListStep = document.getElementById("clinicsListStep");
+  var clinicsHotline = document.getElementById("clinicsHotline");
+  var clinicsDistrictNav = document.getElementById("clinicsDistrictNav");
+  var clinicsDistrictBlocks = document.getElementById("clinicsDistrictBlocks");
+  var btnClinicsChangeCity = document.getElementById("btnClinicsChangeCity");
+
+  var clinicsData = null;
 
   var testRoot = document.getElementById("offlineTestRoot");
   var testIntro = document.getElementById("offlineTestIntro");
@@ -662,10 +673,11 @@
   };
 
   function showPanel(panel) {
-    if (!panelHome || !panelRef || !panelTest) return;
+    if (!panelHome || !panel) return;
     panelHome.classList.remove("is-open");
-    panelRef.classList.remove("is-open");
-    panelTest.classList.remove("is-open");
+    if (panelRef) panelRef.classList.remove("is-open");
+    if (panelTest) panelTest.classList.remove("is-open");
+    if (panelClinics) panelClinics.classList.remove("is-open");
     panel.classList.add("is-open");
     window.scrollTo(0, 0);
   }
@@ -697,6 +709,10 @@
     }
     if (testCategoryBtns) testCategoryBtns.innerHTML = "";
     if (testOptions) testOptions.innerHTML = "";
+    if (testRefLink) {
+      testRefLink.hidden = true;
+      testRefLink.setAttribute("href", "#");
+    }
   }
 
   function renderCategoryButtons() {
@@ -849,7 +865,10 @@
         ) +
         "</p>";
     }
-    if (testRefLink) testRefLink.hidden = false;
+    if (testRefLink) {
+      testRefLink.hidden = true;
+      testRefLink.setAttribute("href", "#");
+    }
   }
 
   function loadKnowledge() {
@@ -891,6 +910,153 @@
       showPanel(panelHome);
     });
   }
+
+  if (testRefLink) {
+    testRefLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      var href = (testRefLink.getAttribute("href") || "").trim();
+      if (!href || href === "#") return;
+      var id = href.indexOf("#") === 0 ? href.slice(1) : "";
+      if (!id || !panelRef) return;
+      showPanel(panelRef);
+      window.setTimeout(function () {
+        var el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          try {
+            window.history.replaceState(null, "", "#" + id);
+          } catch (errNav) {}
+        }
+      }, 180);
+    });
+  }
+
+  function resetClinicsPanel() {
+    if (clinicsCityStep) clinicsCityStep.hidden = false;
+    if (clinicsListStep) clinicsListStep.hidden = true;
+  }
+
+  function renderClinicsForCity(cityKey) {
+    var city = clinicsData && clinicsData[cityKey];
+    if (!city || !clinicsHotline || !clinicsDistrictNav || !clinicsDistrictBlocks) return;
+    clinicsHotline.textContent = "Единый номер: " + (city.hotline || "");
+    clinicsDistrictNav.innerHTML = "";
+    (city.districts || []).forEach(function (dist) {
+      var a = document.createElement("a");
+      a.href = "#offline-clinic-" + dist.id;
+      a.className = "offline-clinics-nav-link";
+      a.textContent = dist.name;
+      clinicsDistrictNav.appendChild(a);
+    });
+    clinicsDistrictBlocks.innerHTML = "";
+    (city.districts || []).forEach(function (dist) {
+      var section = document.createElement("section");
+      section.className = "offline-clinic-district";
+      section.id = "offline-clinic-" + dist.id;
+      var h = document.createElement("h3");
+      h.className = "offline-clinic-district-title";
+      h.textContent = dist.name;
+      section.appendChild(h);
+      var ul = document.createElement("ul");
+      ul.className = "offline-clinic-list";
+      (dist.clinics || []).forEach(function (c) {
+        var li = document.createElement("li");
+        li.className = "offline-clinic-item";
+        var img = document.createElement("img");
+        img.src = "/pictures/paw.png";
+        img.alt = "";
+        img.width = 22;
+        img.height = 22;
+        img.decoding = "async";
+        var body = document.createElement("div");
+        body.className = "offline-clinic-item-body";
+        var nm = document.createElement("strong");
+        nm.className = "offline-clinic-name";
+        nm.textContent = c.name || "";
+        body.appendChild(nm);
+        if (c.address) {
+          var addr = document.createElement("p");
+          addr.className = "offline-clinic-addr";
+          addr.textContent = c.address;
+          body.appendChild(addr);
+        }
+        if (c.phone) {
+          var ph = document.createElement("p");
+          ph.className = "offline-clinic-phone";
+          var tel = document.createElement("a");
+          tel.href = "tel:" + String(c.phone).replace(/\s/g, "");
+          tel.textContent = c.phone;
+          ph.appendChild(tel);
+          body.appendChild(ph);
+        }
+        li.appendChild(img);
+        li.appendChild(body);
+        ul.appendChild(li);
+      });
+      section.appendChild(ul);
+      clinicsDistrictBlocks.appendChild(section);
+    });
+    if (clinicsCityStep) clinicsCityStep.hidden = true;
+    if (clinicsListStep) clinicsListStep.hidden = false;
+  }
+
+  function loadClinicsData(done) {
+    if (clinicsData) {
+      if (done) done(clinicsData);
+      return;
+    }
+    fetch("/offline_clinics.json", { cache: "force-cache" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        clinicsData = d;
+        if (done) done(clinicsData);
+      })
+      .catch(function (e) {
+        console.warn("[offline] clinics load failed:", e);
+        clinicsData = null;
+        if (done) done(null);
+      });
+  }
+
+  if (btnOpenClinics && panelClinics) {
+    btnOpenClinics.addEventListener("click", function () {
+      showPanel(panelClinics);
+      resetClinicsPanel();
+      loadClinicsData(null);
+    });
+  }
+  if (btnBackFromClinics) {
+    btnBackFromClinics.addEventListener("click", function () {
+      showPanel(panelHome);
+      resetClinicsPanel();
+    });
+  }
+  if (btnClinicsChangeCity) {
+    btnClinicsChangeCity.addEventListener("click", function () {
+      resetClinicsPanel();
+    });
+  }
+
+  document.querySelectorAll("[data-offline-city]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = btn.getAttribute("data-offline-city");
+      loadClinicsData(function (data) {
+        if (!data || !data[key]) {
+          if (clinicsDistrictBlocks) {
+            clinicsDistrictBlocks.innerHTML =
+              "<p class=\"offline-clinics-error\">Не удалось загрузить список. Проверьте кеш или подключение при первой загрузке страницы.</p>";
+          }
+          if (clinicsCityStep) clinicsCityStep.hidden = true;
+          if (clinicsListStep) clinicsListStep.hidden = false;
+          return;
+        }
+        renderClinicsForCity(key);
+      });
+    });
+  });
 
   if (testBack) {
     testBack.addEventListener("click", function () {

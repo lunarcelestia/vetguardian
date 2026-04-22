@@ -10,8 +10,8 @@
   <title>VetGuardian — AI-ассистент экстренной ветеринарной помощи</title>
   <link rel="manifest" href="/static/manifest.json">
   <link rel="stylesheet" href="/css/style.css?v=3">
-  <link rel="stylesheet" href="/css/design.css?v=15">
-  <link rel="stylesheet" href="/css/ai-assistant.css?v=10">
+  <link rel="stylesheet" href="/css/design.css?v=17">
+  <link rel="stylesheet" href="/css/ai-assistant.css?v=12">
   <link rel="icon" type="image/png" href="/pictures/new_logo.png">
   <link rel="apple-touch-icon" type="image/png" href="/pictures/new_logo.png">
     <!-- Chart.js для интерактивных графиков -->
@@ -68,7 +68,8 @@
           <div class="hero-actions">
             <button type="button" class="btn-start" id="anamnesisTrigger">Начать анализ</button>
             <p class="hero-offline-hint" id="heroOfflineHint">
-              Наш сайт также работает оффлайн — <button type="button" class="hero-offline-link" id="pwaInstallModalOpen">см. инструкцию</button>
+              <span class="hero-offline-hint-text">Наш сайт также работает оффлайн —</span>
+              <button type="button" class="hero-offline-link" id="pwaInstallModalOpen">см. инструкцию</button>
             </p>
           </div>
         </div>
@@ -394,6 +395,14 @@
                     </div>
                   </li>
                 </ul>
+                <div class="vg-ai-luna-slideview" id="vgAiLunaSlideview" hidden>
+                  <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--prev" id="vgAiLunaSlidePrev" aria-label="Предыдущий пункт">‹</button>
+                  <div class="vg-ai-luna-slide-panel">
+                    <h3 class="vg-ai-luna-slide-title" id="vgAiLunaSlideTitle"></h3>
+                    <p class="vg-ai-luna-slide-text" id="vgAiLunaSlideText"></p>
+                  </div>
+                  <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--next" id="vgAiLunaSlideNext" aria-label="Следующий пункт">›</button>
+                </div>
                 </div>
                 <div class="vg-ai-luna-mob-nav" id="vgAiLunaNav" hidden>
                   <button type="button" class="vg-ai-luna-mob-arrow" id="vgAiLunaPrev" aria-label="Предыдущий пункт">‹</button>

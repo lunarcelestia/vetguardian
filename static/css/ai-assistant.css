@@ -130,8 +130,8 @@
   white-space: normal;
   overflow-wrap: anywhere;
   max-width: 100%;
-  /* якорь «Поддержка»: заголовок под фиксированной шапкой, не уезжает вверх */
-  scroll-margin-top: clamp(96px, 14vh, 168px);
+  /* якорь «Поддержка»: заголовок целиком под фиксированной шапкой (логотип ~128px + padding) */
+  scroll-margin-top: clamp(152px, 22vh, 220px);
 }
 
 .vg-ai-card {
@@ -1161,99 +1161,97 @@
   }
 }
 
-/* Luna: на вертикальных узких экранах — одна карточка, стрелки, свайп по горизонтали */
+/* Luna: портрет телефона — белый блок, голубой заголовок, текст, стрелки по бокам */
 @media (max-width: 960px) and (orientation: portrait) {
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active {
+  .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
   }
 
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-mob-nav {
-    display: flex;
+  .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-mob-nav {
+    display: none !important;
   }
 
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-mob-viewport {
-    overflow-x: hidden;
-    overflow-y: visible;
+  .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-mob-viewport {
+    overflow: visible;
     width: 100%;
-    min-height: 0;
+    display: flex;
+    justify-content: center;
   }
 
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-cards {
+  .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-cards {
+    display: none !important;
+  }
+
+  .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-slideview:not([hidden]) {
+    display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
-    width: 500%;
-    max-width: none;
-    margin: 0;
-    padding: 0 2px;
-    gap: 0;
-    align-items: flex-start;
-    transition: transform 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
-    will-change: transform;
-  }
-
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-check-item {
-    flex: 0 0 20%;
-    width: 20%;
-    max-width: none;
+    align-items: stretch;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+    max-width: min(100%, 300px);
+    margin: 0 auto;
+    padding: 6px 0 4px;
     box-sizing: border-box;
-    padding: 4px 3px 4px 5px;
-    opacity: 1 !important;
-    transform: none !important;
-    transition: opacity 0.2s ease, transform 0.2s ease !important;
-    transition-delay: 0ms !important;
   }
 
-  .vg-ai-luna-mob-arrow {
-    width: 36px;
-    height: 36px;
-    font-size: 1.28rem;
-    border-radius: 10px;
-    align-self: flex-start;
-    margin-top: 2px;
-  }
-}
-
-/* Luna: ещё компактнее «прямоугольники» в портрете (узкая колонка поверх картинки) */
-@media (max-width: 960px) and (orientation: portrait) {
-  .vg-ai-check-toggle {
-    padding: 7px 8px;
-    min-height: 2.45rem;
-    gap: 5px;
-    border-radius: 10px;
-    font-size: clamp(0.58rem, 2.95vw, 0.74rem);
-  }
-
-  .vg-ai-paw-wrap,
-  .vg-ai-paw {
-    width: 22px;
-    height: 22px;
+  .vg-ai-luna-slide-arrow {
+    flex: 0 0 auto;
+    width: 40px;
+    min-height: 100px;
+    align-self: center;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #0c1929;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12);
+    font-family: inherit;
   }
 
-  .vg-ai-luna-cards {
-    gap: 5px;
+  .vg-ai-luna-slide-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-check-toggle {
-    padding: 5px 6px;
-    min-height: 2.15rem;
-    gap: 4px;
-    border-radius: 9px;
-    font-size: clamp(0.54rem, 3.1vw, 0.68rem);
+  .vg-ai-luna-slide-panel {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: min(68vw, 220px);
+    padding: 14px 14px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+    box-sizing: border-box;
   }
 
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-check-long {
-    padding-left: 32px;
-    font-size: clamp(0.56rem, 2.9vw, 0.72rem);
+  .vg-ai-luna-slide-title {
+    margin: 0 0 10px;
+    font-size: clamp(1rem, 3.8vw, 1.2rem);
+    font-weight: 800;
+    color: #0284c7;
+    font-family: var(--font, "TT Days Sans", sans-serif);
+    line-height: 1.2;
   }
 
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-paw-wrap,
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-paw {
-    width: 18px;
-    height: 18px;
+  .vg-ai-luna-slide-text {
+    margin: 0;
+    font-size: clamp(0.78rem, 2.9vw, 0.9rem);
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--text, #0c1929);
+    max-height: min(46vh, 300px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* вторая строка заголовка чуть ближе к первой */
   .vg-ai-luna-head-br {
     margin: 0.02em 0 -0.14em;
   }
@@ -1277,8 +1275,8 @@
 }
 
 @media (max-width: 960px) and (orientation: portrait) and (prefers-reduced-motion: reduce) {
-  .vg-ai-luna-cards-wrap.vg-ai-luna-carousel--active .vg-ai-luna-cards {
-    transition-duration: 0.15s;
+  .vg-ai-luna-slide-text {
+    scroll-behavior: auto;
   }
 }
 
