@@ -11,7 +11,7 @@
   <link rel="manifest" href="/static/manifest.json">
   <link rel="stylesheet" href="/css/style.css?v=3">
   <link rel="stylesheet" href="/css/design.css?v=17">
-  <link rel="stylesheet" href="/css/ai-assistant.css?v=14">
+  <link rel="stylesheet" href="/css/ai-assistant.css?v=15">
   <link rel="icon" type="image/png" href="/pictures/new_logo.png">
   <link rel="apple-touch-icon" type="image/png" href="/pictures/new_logo.png">
     <!-- Chart.js для интерактивных графиков -->
@@ -396,12 +396,14 @@
                   </li>
                 </ul>
                 <div class="vg-ai-luna-slideview" id="vgAiLunaSlideview" hidden>
-                  <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--prev" id="vgAiLunaSlidePrev" aria-label="Предыдущий пункт">‹</button>
                   <div class="vg-ai-luna-slide-panel">
-                    <h3 class="vg-ai-luna-slide-title" id="vgAiLunaSlideTitle"></h3>
-                    <p class="vg-ai-luna-slide-text" id="vgAiLunaSlideText"></p>
+                    <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--prev" id="vgAiLunaSlidePrev" aria-label="Предыдущий пункт">‹</button>
+                    <div class="vg-ai-luna-slide-inner">
+                      <h3 class="vg-ai-luna-slide-title" id="vgAiLunaSlideTitle"></h3>
+                      <p class="vg-ai-luna-slide-text" id="vgAiLunaSlideText"></p>
+                    </div>
+                    <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--next" id="vgAiLunaSlideNext" aria-label="Следующий пункт">›</button>
                   </div>
-                  <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--next" id="vgAiLunaSlideNext" aria-label="Следующий пункт">›</button>
                 </div>
                 </div>
                 <div class="vg-ai-luna-mob-nav" id="vgAiLunaNav" hidden>
