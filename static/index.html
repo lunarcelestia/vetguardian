@@ -11,7 +11,7 @@
   <link rel="manifest" href="/static/manifest.json">
   <link rel="stylesheet" href="/css/style.css?v=3">
   <link rel="stylesheet" href="/css/design.css?v=17">
-  <link rel="stylesheet" href="/css/ai-assistant.css?v=16">
+  <link rel="stylesheet" href="/css/ai-assistant.css?v=19">
   <link rel="icon" type="image/png" href="/pictures/new_logo.png">
   <link rel="apple-touch-icon" type="image/png" href="/pictures/new_logo.png">
     <!-- Chart.js для интерактивных графиков -->
@@ -333,7 +333,7 @@
                         <img class="vg-ai-paw vg-ai-paw--on" src="/pictures/technical/chosen_paw.png" alt="" width="34" height="34" decoding="async" />
                       </span>
                       <span class="vg-ai-check-title-row">
-                        <span class="vg-ai-check-short">Сознание и активность</span>
+                        <span class="vg-ai-check-short" data-slide-title-mobile="Активность">Сознание и активность</span>
                         <span class="vg-ai-check-chevron" aria-hidden="true"></span>
                       </span>
                     </button>
@@ -398,8 +398,8 @@
                 <div class="vg-ai-luna-slideview" id="vgAiLunaSlideview" hidden>
                   <div class="vg-ai-luna-slide-panel">
                     <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--prev" id="vgAiLunaSlidePrev" aria-label="Предыдущий пункт">‹</button>
+                    <h3 class="vg-ai-luna-slide-title" id="vgAiLunaSlideTitle"></h3>
                     <div class="vg-ai-luna-slide-inner">
-                      <h3 class="vg-ai-luna-slide-title" id="vgAiLunaSlideTitle"></h3>
                       <p class="vg-ai-luna-slide-text" id="vgAiLunaSlideText"></p>
                     </div>
                     <button type="button" class="vg-ai-luna-slide-arrow vg-ai-luna-slide-arrow--next" id="vgAiLunaSlideNext" aria-label="Следующий пункт">›</button>
@@ -1002,7 +1002,7 @@
     </div>
   </div>
 
-  <script src="/js/app.js?v=19"></script>
+  <script src="/js/app.js?v=20"></script>
   <script src="/js/ai-assistant.js?v=2"></script>
   <script>
     (function () {

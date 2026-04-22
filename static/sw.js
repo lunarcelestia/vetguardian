@@ -1,5 +1,5 @@
 /* VetGuardian Service Worker — shell + network-first, API без кеша */
-const CACHE_NAME = "vetguardian-v9";
+const CACHE_NAME = "vetguardian-v13";
 
 const PRECACHE_URLS = [
   "/",
@@ -8,9 +8,9 @@ const PRECACHE_URLS = [
   "/offline_clinics.json",
   "/css/style.css?v=3",
   "/css/design.css?v=17",
-  "/css/ai-assistant.css?v=16",
+  "/css/ai-assistant.css?v=19",
   "/css/offline.css?v=3",
-  "/js/app.js?v=19",
+  "/js/app.js?v=20",
   "/js/ai-assistant.js?v=2",
   "/js/knowledge_match.js?v=1",
   "/js/offline.js?v=7",
