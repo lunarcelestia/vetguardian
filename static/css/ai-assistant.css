@@ -1163,30 +1163,38 @@
 
 /* Luna: портрет телефона — белый блок, голубой заголовок, текст, стрелки по бокам */
 @media (max-width: 960px) and (orientation: portrait) {
-  /* не обрезать карточку снизу; блок сразу под заголовком, не растягиваем на всю высоту rail */
+  /* весь оверлей строго внутри бирюзовой карточки — без заезда на блок ниже */
   .vg-ai-luna-figure:has(.vg-ai-luna--slide-mode) {
-    overflow: visible;
-    margin-bottom: 10px;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .vg-ai-luna-figure:has(.vg-ai-luna--slide-mode) .vg-ai-luna-overlay {
+    overflow: hidden;
   }
 
   .vg-ai-luna-rail:has(.vg-ai-luna--slide-mode) {
-    padding-bottom: max(12px, 2.5vw);
+    padding: 6px max(8px, 2vw) 10px 0;
     justify-content: flex-start;
+    box-sizing: border-box;
   }
 
   .vg-ai-luna-rail:has(.vg-ai-luna--slide-mode) .vg-ai-luna-head {
-    margin-top: 1%;
-    margin-bottom: 6px;
+    margin-top: 0.5%;
+    margin-bottom: 4px;
+    flex: 0 0 auto;
   }
 
+  /* оставшееся место под заголовком rail — ограничиваем высоту, чтобы слайд не вылезал */
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode {
     flex-direction: column;
-    align-items: flex-end;
-    flex: 0 0 auto;
+    align-items: stretch;
+    flex: 1 1 auto;
     min-height: 0;
     width: 100%;
     margin-top: 0;
     padding-top: 0;
+    overflow: hidden;
   }
 
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-mob-nav {
@@ -1194,14 +1202,15 @@
   }
 
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-mob-viewport {
-    overflow: visible;
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
     width: 100%;
-    max-width: 100%;
     display: flex;
+    align-items: flex-start;
     justify-content: flex-end;
-    padding-left: 6%;
-    padding-right: 0;
+    padding: 0 0 0 5%;
     box-sizing: border-box;
   }
 
@@ -1212,32 +1221,39 @@
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-slideview:not([hidden]) {
     display: flex;
     flex-direction: row;
-    align-items: stretch;
+    align-items: center;
     justify-content: flex-end;
-    gap: 2px;
-    width: auto;
-    max-width: min(100%, 318px);
-    margin: 0 0 0 auto;
-    padding: 2px 0 6px;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 2px 2px 4px 0;
     box-sizing: border-box;
-    transform: translateX(4px);
+    transform: translateX(3px);
   }
 
   .vg-ai-luna-slide-arrow {
     flex: 0 0 auto;
-    width: 40px;
-    min-height: 100px;
+    width: 38px;
+    height: 48px;
+    min-height: 0;
     align-self: center;
     margin: 0;
     padding: 0;
     border: none;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.88);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.92);
     color: #0c1929;
-    font-size: 1.75rem;
+    font-size: 1.55rem;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12);
     font-family: inherit;
   }
@@ -1248,20 +1264,27 @@
   }
 
   .vg-ai-luna-slide-panel {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
-    max-width: min(68vw, 220px);
-    padding: 14px 14px 16px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.97);
-    border: 1px solid rgba(226, 232, 240, 0.95);
-    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+    max-width: min(76vw, 288px);
+    max-height: 100%;
+    min-height: 0;
+    padding: 12px 14px 14px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(226, 232, 240, 0.98);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow: hidden;
   }
 
   .vg-ai-luna-slide-title {
-    margin: 0 0 10px;
-    font-size: clamp(1rem, 3.8vw, 1.2rem);
+    margin: 0 0 8px;
+    flex: 0 0 auto;
+    font-size: clamp(0.98rem, 3.6vw, 1.15rem);
     font-weight: 800;
     color: #0284c7;
     font-family: var(--font, "TT Days Sans", sans-serif);
@@ -1270,11 +1293,12 @@
 
   .vg-ai-luna-slide-text {
     margin: 0;
-    font-size: clamp(0.78rem, 2.9vw, 0.9rem);
+    flex: 1 1 auto;
+    min-height: 0;
+    font-size: clamp(0.76rem, 2.85vw, 0.88rem);
     font-weight: 600;
     line-height: 1.45;
     color: var(--text, #0c1929);
-    max-height: min(36vh, 240px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
