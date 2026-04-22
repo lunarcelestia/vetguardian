@@ -1163,9 +1163,30 @@
 
 /* Luna: портрет телефона — белый блок, голубой заголовок, текст, стрелки по бокам */
 @media (max-width: 960px) and (orientation: portrait) {
+  /* не обрезать карточку снизу; блок сразу под заголовком, не растягиваем на всю высоту rail */
+  .vg-ai-luna-figure:has(.vg-ai-luna--slide-mode) {
+    overflow: visible;
+    margin-bottom: 10px;
+  }
+
+  .vg-ai-luna-rail:has(.vg-ai-luna--slide-mode) {
+    padding-bottom: max(12px, 2.5vw);
+    justify-content: flex-start;
+  }
+
+  .vg-ai-luna-rail:has(.vg-ai-luna--slide-mode) .vg-ai-luna-head {
+    margin-top: 1%;
+    margin-bottom: 6px;
+  }
+
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-end;
+    flex: 0 0 auto;
+    min-height: 0;
+    width: 100%;
+    margin-top: 0;
+    padding-top: 0;
   }
 
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-mob-nav {
@@ -1174,9 +1195,14 @@
 
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-mob-viewport {
     overflow: visible;
+    flex: 0 0 auto;
     width: 100%;
+    max-width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
+    padding-left: 6%;
+    padding-right: 0;
+    box-sizing: border-box;
   }
 
   .vg-ai-luna-cards-wrap.vg-ai-luna--slide-mode .vg-ai-luna-cards {
@@ -1187,13 +1213,14 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    justify-content: center;
+    justify-content: flex-end;
     gap: 2px;
-    width: 100%;
-    max-width: min(100%, 300px);
-    margin: 0 auto;
-    padding: 6px 0 4px;
+    width: auto;
+    max-width: min(100%, 318px);
+    margin: 0 0 0 auto;
+    padding: 2px 0 6px;
     box-sizing: border-box;
+    transform: translateX(4px);
   }
 
   .vg-ai-luna-slide-arrow {
@@ -1247,7 +1274,7 @@
     font-weight: 600;
     line-height: 1.45;
     color: var(--text, #0c1929);
-    max-height: min(46vh, 300px);
+    max-height: min(36vh, 240px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
