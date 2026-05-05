@@ -40,6 +40,7 @@ def init_db():
             name TEXT,
             species TEXT,
             breed TEXT,
+            photo_data TEXT,
             age_group TEXT,
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id)
@@ -106,6 +107,55 @@ def init_db():
             symptoms TEXT,  -- JSON массив симптомов
             behaviors TEXT, -- JSON массив поведенческих проблем
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS calendar_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            pet_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL, -- vaccination | treatment
+            event_date TEXT NOT NULL, -- YYYY-MM-DD
+            note TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (pet_id) REFERENCES pets(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            endpoint TEXT NOT NULL,
+            p256dh TEXT NOT NULL,
+            auth TEXT NOT NULL,
+            user_agent TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            last_seen_at TEXT DEFAULT (datetime('now')),
+            is_active INTEGER DEFAULT 1,
+            UNIQUE(user_id, endpoint),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS user_notification_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            notify_offset_days INTEGER DEFAULT 7,
+            enabled INTEGER DEFAULT 0,
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS notification_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id INTEGER NOT NULL,
+            subscription_id INTEGER NOT NULL,
+            scheduled_for TEXT NOT NULL,
+            sent_at TEXT DEFAULT (datetime('now')),
+            status TEXT DEFAULT 'sent',
+            error TEXT,
+            UNIQUE(event_id, subscription_id, scheduled_for),
+            FOREIGN KEY (event_id) REFERENCES calendar_events(id),
+            FOREIGN KEY (subscription_id) REFERENCES push_subscriptions(id)
         );
         """)
 
@@ -184,6 +234,7 @@ def init_db():
         ensure_column("behavior_stats", "total_cases", "total_cases INTEGER DEFAULT 0")
         ensure_column("behavior_stats", "created_at", "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
         ensure_column("behavior_stats", "updated_at", "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        ensure_column("pets", "photo_data", "photo_data TEXT")
 
         # Если таблица age_stats уже существовала до добавления новых полей,
         # проставляем для известных возрастных групп базовые частоты,

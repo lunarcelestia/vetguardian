@@ -3,6 +3,10 @@
 
   const API = "/api";
   const TOKEN_KEY = "vetguardian_token";
+  const DEFAULT_PET_PHOTO = "https://s.fotora.ru/0e7c61dbf76dff54.jpeg";
+  var userPets = [];
+  var selectedCabinetPetId = null;
+  var selectedQuestionnairePetId = null;
 
   function getToken() {
     return localStorage.getItem(TOKEN_KEY);
@@ -181,6 +185,12 @@
   function openAnamnesisModal() {
     if (anamnesisOverlay) anamnesisOverlay.classList.add("open");
     document.body.classList.add("body-locked");
+    if (getToken()) {
+      loadPets();
+    } else {
+      selectedQuestionnairePetId = null;
+      renderQuestionnairePetSelector();
+    }
     setStep("questionnaire", 25);
     resetQuestionBlocks();
     selectedPhotoFiles = [];
@@ -516,6 +526,7 @@
             extra_text: extra_text,
             primary_concern: primary_concern,
             photos: photosBase64,
+            pet_id: selectedQuestionnairePetId,
           }),
           signal: controller ? controller.signal : undefined,
         });
@@ -764,60 +775,151 @@
   const cabinetHistoryList = document.getElementById("cabinetHistoryList");
   const cabinetBtn = document.getElementById("cabinetBtn");
   const backToMainBtn = document.getElementById("backToMainBtn");
+  const cabinetPetName = document.getElementById("cabinetPetName");
+  const cabinetPetBreed = document.getElementById("cabinetPetBreed");
+  const cabinetEmail = document.getElementById("cabinetEmail");
+  const cabinetPetPhoto = document.getElementById("cabinetPetPhoto");
+  const cabinetChangePetPhotoBtn = document.getElementById("cabinetChangePetPhotoBtn");
+  const cabinetPetsSwitcher = document.getElementById("cabinetPetsSwitcher");
+  const addPetModal = document.getElementById("addPetModal");
+  const addPetForm = document.getElementById("addPetForm");
+  const questionnairePetSelectorWrap = document.getElementById("questionnairePetSelectorWrap");
+  const questionnairePetSelector = document.getElementById("questionnairePetSelector");
+
+  function renderQuestionnairePetSelector() {
+    if (!questionnairePetSelectorWrap || !questionnairePetSelector) return;
+    if (!getToken() || !userPets.length) {
+      questionnairePetSelectorWrap.style.display = "none";
+      return;
+    }
+    questionnairePetSelectorWrap.style.display = "block";
+    if (!selectedQuestionnairePetId) selectedQuestionnairePetId = userPets[0].id;
+    questionnairePetSelector.innerHTML = userPets
+      .map(function (pet) {
+        var active = Number(selectedQuestionnairePetId) === Number(pet.id) ? " active" : "";
+        return "<button type=\"button\" class=\"pet-choice-btn" + active + "\" data-pet-id=\"" + String(pet.id) + "\">" + escapeHtml(pet.name || "Питомец") + "</button>";
+      })
+      .join("");
+    Array.prototype.forEach.call(questionnairePetSelector.querySelectorAll(".pet-choice-btn"), function (btn) {
+      btn.addEventListener("click", function () {
+        selectedQuestionnairePetId = parseInt(btn.getAttribute("data-pet-id") || "0", 10) || null;
+        renderQuestionnairePetSelector();
+      });
+    });
+  }
+
+  function loadPets() {
+    if (!getToken()) return Promise.resolve([]);
+    return fetch(API + "/pets", { headers: authHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        userPets = res && res.ok ? (res.items || []) : [];
+        if (userPets.length && !selectedCabinetPetId) selectedCabinetPetId = userPets[0].id;
+        if (userPets.length && !selectedQuestionnairePetId) selectedQuestionnairePetId = userPets[0].id;
+        renderQuestionnairePetSelector();
+        return userPets;
+      })
+      .catch(function () {
+        userPets = [];
+        renderQuestionnairePetSelector();
+        return [];
+      });
+  }
+
+  function renderCabinetPetTabs() {
+    if (!cabinetPetsSwitcher) return;
+    cabinetPetsSwitcher.innerHTML = (userPets || [])
+      .map(function (pet) {
+        var active = Number(selectedCabinetPetId) === Number(pet.id) ? " active" : "";
+        return "<button type=\"button\" class=\"cabinet-pet-chip" + active + "\" data-pet-id=\"" + String(pet.id) + "\">" + escapeHtml(pet.name || "Питомец") + "</button>";
+      })
+      .join("");
+    Array.prototype.forEach.call(cabinetPetsSwitcher.querySelectorAll(".cabinet-pet-chip"), function (btn) {
+      btn.addEventListener("click", function () {
+        selectedCabinetPetId = parseInt(btn.getAttribute("data-pet-id") || "0", 10) || null;
+        renderCabinetPetTabs();
+        renderCabinetPetCard();
+        loadCabinetHistory();
+        if (calendarModal && calendarModal.classList.contains("open")) {
+          loadCalendarEvents();
+        }
+      });
+    });
+  }
+
+  function renderCabinetPetCard() {
+    if (!selectedCabinetPetId && userPets.length) {
+      selectedCabinetPetId = userPets[0].id;
+    }
+    var pet = userPets.find(function (p) { return Number(p.id) === Number(selectedCabinetPetId); }) || null;
+    if (cabinetPetName) cabinetPetName.textContent = pet ? (pet.name || "—") : "—";
+    if (cabinetPetBreed) cabinetPetBreed.textContent = pet ? (pet.breed || "—") : "—";
+    if (cabinetPetPhoto) cabinetPetPhoto.src = pet && pet.photo_data ? pet.photo_data : DEFAULT_PET_PHOTO;
+    var hasCustomPhoto = !!(pet && pet.photo_data);
+    var uploadBtn = document.getElementById("cabinetUploadPetPhotoBtn");
+    var photoWrap = document.querySelector(".cabinet-photo-wrap");
+    if (uploadBtn) uploadBtn.style.display = hasCustomPhoto ? "none" : "inline-flex";
+    if (photoWrap) photoWrap.classList.toggle("has-custom-photo", hasCustomPhoto);
+  }
+
+  function loadCabinetHistory() {
+    if (!cabinetHistoryList) return;
+    var url = API + "/history";
+    if (selectedCabinetPetId) url += "?pet_id=" + encodeURIComponent(String(selectedCabinetPetId));
+    fetch(url, { headers: authHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok) return;
+        var items = res.items || [];
+        cabinetHistoryList.innerHTML = items.length === 0
+          ? "<li class=\"cabinet-empty-history\">История обследований пуста. Для заполнения пройдите анамнез.<br><button type=\"button\" class=\"cabinet-empty-history-btn\" id=\"cabinetGoToAnamnesisBtn\">Перейти к опроснику</button></li>"
+          : items.map(function (it) {
+            var levelCl = it.danger_level || "green";
+            return "<li data-case-id=\"" + String(it.id) + "\"><span class=\"date\">" + escapeHtml(formatDate(it.created_at)) + "</span> <span class=\"level " + levelCl + "\">" + (levelCl === "red" ? "Срочно" : levelCl === "yellow" ? "Планово" : "Наблюдение") + "</span><br>" + escapeHtml(it.summary || "") + "</li>";
+          }).join("");
+        Array.prototype.forEach.call(cabinetHistoryList.querySelectorAll("li[data-case-id]"), function (li) {
+          li.addEventListener("click", function () {
+            var id = parseInt(li.getAttribute("data-case-id") || "0", 10);
+            if (id) openHistoryCase(id);
+          });
+        });
+        var goBtn = document.getElementById("cabinetGoToAnamnesisBtn");
+        if (goBtn) {
+          goBtn.addEventListener("click", function () {
+            hideCabinet();
+            openAnamnesisModal();
+          });
+        }
+      })
+      .catch(function () {});
+  }
 
   function showCabinet() {
     if (!getToken()) {
       document.getElementById("authModal").classList.add("open");
       return;
     }
-    // элементы паспорта
-    var petNameSpan = document.getElementById("cabinetPetName");
-    var petEmailSpan = document.getElementById("cabinetEmail");
-
     fetch(API + "/me", { headers: authHeaders() })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res.ok || !res.user) {
-          // токен невалиден — сбрасываем и просим войти
           setToken(null);
           updateHeaderAuth();
           if (cabinetSection) cabinetSection.classList.remove("visible");
           document.getElementById("authModal").classList.add("open");
           throw new Error("unauthorized");
         }
-
-        if (petNameSpan) petNameSpan.textContent = res.user.name || "—";
-        if (petEmailSpan) petEmailSpan.textContent = res.user.email || "—";
-
-        if (cabinetSection) {
-          cabinetSection.classList.add("visible");
-        }
-
-        // подгружаем историю, но это не блокирует показ паспорта
-        return fetch(API + "/history", { headers: authHeaders() });
+        if (cabinetEmail) cabinetEmail.textContent = res.user.email || "—";
+        return loadPets();
       })
-      .then(function (r) { return r ? r.json() : null; })
-      .then(function (res) {
-        if (!res || !res.ok) return;
-        const items = res.items || [];
-        if (cabinetHistoryList) {
-          cabinetHistoryList.innerHTML = items.length === 0
-            ? "<li>История пуста. Пройдите опрос «Составить анамнез».</li>"
-            : items.map(function (it) {
-              const levelCl = it.danger_level || "green";
-              return "<li data-case-id=\"" + String(it.id) + "\"><span class=\"date\">" + escapeHtml(formatDate(it.created_at)) + "</span> <span class=\"level " + levelCl + "\">" + (levelCl === "red" ? "Срочно" : levelCl === "yellow" ? "Планово" : "Наблюдение") + "</span><br>" + escapeHtml(it.summary || "") + "</li>";
-            }).join("");
-
-          // навешиваем обработчики клика на элементы истории в кабинете
-          Array.prototype.forEach.call(cabinetHistoryList.querySelectorAll("li[data-case-id]"), function (li) {
-            li.addEventListener("click", function () {
-              var id = parseInt(li.getAttribute("data-case-id") || "0", 10);
-              if (id) openHistoryCase(id);
-            });
-          });
-        }
+      .then(function () {
+        if (cabinetSection) cabinetSection.classList.add("visible");
+        if (userPets.length && !selectedCabinetPetId) selectedCabinetPetId = userPets[0].id;
+        renderCabinetPetTabs();
+        renderCabinetPetCard();
+        loadCabinetHistory();
       })
-      .catch(function () { /* уже обработано выше или история не критична */ });
+      .catch(function () {});
   }
 
   function hideCabinet() {
@@ -839,9 +941,463 @@
         historyStrip.querySelectorAll(".history-card").forEach(function (c) { c.remove(); });
       }
       if (historyEmpty) historyEmpty.style.display = "inline";
+      userPets = [];
+      selectedCabinetPetId = null;
+      selectedQuestionnairePetId = null;
+      renderQuestionnairePetSelector();
       document.getElementById("authModal").classList.add("open");
     });
   }
+
+  var cabinetAddPetBtn = document.getElementById("cabinetAddPetBtn");
+  var cabinetCalendarBtn = document.getElementById("cabinetCalendarBtn");
+  var calendarModal = document.getElementById("calendarModal");
+  var calendarCloseBtn = document.getElementById("calendarCloseBtn");
+  if (cabinetAddPetBtn && addPetModal) {
+    cabinetAddPetBtn.addEventListener("click", function () {
+      addPetModal.classList.add("open");
+    });
+  }
+  if (cabinetCalendarBtn && calendarModal) {
+    cabinetCalendarBtn.addEventListener("click", function () {
+      openCalendarModal();
+    });
+  }
+  if (calendarCloseBtn && calendarModal) {
+    calendarCloseBtn.addEventListener("click", function () {
+      calendarModal.classList.remove("open");
+    });
+  }
+  if (calendarModal) {
+    calendarModal.addEventListener("click", function (e) {
+      if (e.target === calendarModal) calendarModal.classList.remove("open");
+    });
+  }
+  var closeAddPetModal = document.getElementById("closeAddPetModal");
+  if (closeAddPetModal && addPetModal) {
+    closeAddPetModal.addEventListener("click", function () {
+      addPetModal.classList.remove("open");
+    });
+  }
+  if (addPetModal) {
+    addPetModal.addEventListener("click", function (e) {
+      if (e.target === addPetModal) addPetModal.classList.remove("open");
+    });
+  }
+  if (addPetForm) {
+    addPetForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var fd = new FormData(addPetForm);
+      fetch(API + "/pets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ name: fd.get("name"), breed: fd.get("breed") }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (!res || !res.ok) {
+            alert((res && res.error) || "Не удалось добавить питомца");
+            return;
+          }
+          addPetForm.reset();
+          addPetModal.classList.remove("open");
+          loadPets().then(function () {
+            selectedCabinetPetId = res.pet_id || (userPets[0] && userPets[0].id) || null;
+            renderCabinetPetTabs();
+            renderCabinetPetCard();
+            loadCabinetHistory();
+          });
+        })
+        .catch(function () { alert("Ошибка сети"); });
+    });
+  }
+
+  var cabinetUploadPetPhotoBtn = document.getElementById("cabinetUploadPetPhotoBtn");
+  var cabinetPetPhotoInput = document.getElementById("cabinetPetPhotoInput");
+  if (cabinetUploadPetPhotoBtn && cabinetPetPhotoInput) {
+    cabinetUploadPetPhotoBtn.addEventListener("click", function () {
+      if (!selectedCabinetPetId && userPets.length) {
+        selectedCabinetPetId = userPets[0].id;
+      }
+      if (!selectedCabinetPetId) {
+        alert("Сначала выберите питомца");
+        return;
+      }
+      cabinetPetPhotoInput.click();
+    });
+    cabinetPetPhotoInput.addEventListener("change", function () {
+      var file = cabinetPetPhotoInput.files && cabinetPetPhotoInput.files[0];
+      if (!file || !selectedCabinetPetId) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        var dataUrl = String(reader.result || "");
+        fetch(API + "/pets/" + encodeURIComponent(String(selectedCabinetPetId)) + "/photo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ photo_data: dataUrl }),
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || !res.ok) {
+              alert((res && res.error) || "Не удалось обновить фото");
+              return;
+            }
+            loadPets().then(function () {
+              renderCabinetPetTabs();
+              renderCabinetPetCard();
+            });
+          })
+          .catch(function () { alert("Ошибка сети"); });
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  if (cabinetChangePetPhotoBtn && cabinetPetPhotoInput) {
+    cabinetChangePetPhotoBtn.addEventListener("click", function () {
+      if (!selectedCabinetPetId && userPets.length) {
+        selectedCabinetPetId = userPets[0].id;
+      }
+      if (!selectedCabinetPetId) {
+        alert("Сначала выберите питомца");
+        return;
+      }
+      cabinetPetPhotoInput.click();
+    });
+  }
+
+  // ——— Календарь процедур + уведомления PWA ———
+  var calendarTypeTabs = document.querySelectorAll(".calendar-type-tab");
+  var calendarMonthSelect = document.getElementById("calendarMonthSelect");
+  var calendarYearSelect = document.getElementById("calendarYearSelect");
+  var calendarWeekdays = document.getElementById("calendarWeekdays");
+  var calendarGrid = document.getElementById("calendarGrid");
+  var calendarFormWrap = document.getElementById("calendarFormWrap");
+  var calendarDateInput = document.getElementById("calendarDateInput");
+  var calendarTypeInput = document.getElementById("calendarTypeInput");
+  var calendarNoteInput = document.getElementById("calendarNoteInput");
+  var calendarFormActions = document.getElementById("calendarFormActions");
+  var calendarFormStatus = document.getElementById("calendarFormStatus");
+  var calendarPwaDesc = document.getElementById("calendarPwaDesc");
+  var calendarEnableNotificationsBtn = document.getElementById("calendarEnableNotificationsBtn");
+  var calendarNotifyConfig = document.getElementById("calendarNotifyConfig");
+  var calendarNotifyChips = document.querySelectorAll(".calendar-notify-chip");
+
+  var calendarState = {
+    eventType: "vaccination",
+    month: new Date().getMonth(),
+    year: new Date().getFullYear(),
+    selectedDate: null,
+    selectedEventId: null,
+    events: [],
+    notifyOffset: 7,
+    notifyEnabled: 0,
+  };
+
+  function isPwaMobileMode() {
+    var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+    var iosStandalone = window.navigator && window.navigator.standalone;
+    var isMobile = window.innerWidth <= 960;
+    return !!((standalone || iosStandalone) && isMobile);
+  }
+
+  function openCalendarModal() {
+    if (!calendarModal) return;
+    calendarModal.classList.add("open");
+    if (!selectedCabinetPetId && userPets.length) selectedCabinetPetId = userPets[0].id;
+    initCalendarUi();
+    loadCalendarEvents();
+    loadPushSettings();
+  }
+
+  function initCalendarUi() {
+    if (!calendarMonthSelect || !calendarYearSelect || !calendarWeekdays) return;
+    var monthNames = [
+      "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+      "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ];
+    if (!calendarMonthSelect.options.length) {
+      monthNames.forEach(function (m, i) {
+        var opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = m;
+        calendarMonthSelect.appendChild(opt);
+      });
+    }
+    if (!calendarYearSelect.options.length) {
+      var y = new Date().getFullYear();
+      for (var yy = y - 2; yy <= y + 7; yy++) {
+        var yopt = document.createElement("option");
+        yopt.value = String(yy);
+        yopt.textContent = String(yy);
+        calendarYearSelect.appendChild(yopt);
+      }
+    }
+    calendarMonthSelect.value = String(calendarState.month);
+    calendarYearSelect.value = String(calendarState.year);
+    calendarWeekdays.innerHTML = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map(function (d) {
+      return "<div>" + d + "</div>";
+    }).join("");
+    calendarMonthSelect.onchange = function () {
+      calendarState.month = parseInt(calendarMonthSelect.value || "0", 10);
+      renderCalendarGrid();
+    };
+    calendarYearSelect.onchange = function () {
+      calendarState.year = parseInt(calendarYearSelect.value || String(new Date().getFullYear()), 10);
+      renderCalendarGrid();
+    };
+    Array.prototype.forEach.call(calendarTypeTabs || [], function (btn) {
+      btn.onclick = function () {
+        calendarState.eventType = btn.getAttribute("data-event-type") || "vaccination";
+        Array.prototype.forEach.call(calendarTypeTabs, function (b) { b.classList.toggle("active", b === btn); });
+        calendarState.selectedDate = null;
+        calendarState.selectedEventId = null;
+        if (calendarFormWrap) calendarFormWrap.style.display = "none";
+        renderCalendarGrid();
+      };
+    });
+    var pwaMode = isPwaMobileMode();
+    if (calendarPwaDesc) calendarPwaDesc.style.display = pwaMode ? "block" : "none";
+    if (calendarEnableNotificationsBtn) calendarEnableNotificationsBtn.style.display = pwaMode ? "inline-flex" : "none";
+  }
+
+  function formatDateIso(y, m, d) {
+    var mm = String(m + 1).padStart(2, "0");
+    var dd = String(d).padStart(2, "0");
+    return String(y) + "-" + mm + "-" + dd;
+  }
+
+  function renderCalendarGrid() {
+    if (!calendarGrid) return;
+    var y = calendarState.year;
+    var m = calendarState.month;
+    var first = new Date(y, m, 1);
+    var jsDay = first.getDay();
+    var offset = jsDay === 0 ? 6 : jsDay - 1;
+    var total = new Date(y, m + 1, 0).getDate();
+    var html = [];
+    for (var i = 0; i < offset; i++) html.push("<button type=\"button\" class=\"calendar-day empty\"></button>");
+    for (var d = 1; d <= total; d++) {
+      var iso = formatDateIso(y, m, d);
+      var ev = (calendarState.events || []).find(function (e) {
+        return e.event_type === calendarState.eventType && e.event_date === iso;
+      });
+      var cls = "calendar-day";
+      if (ev) cls += " has-event";
+      if (calendarState.selectedDate === iso) cls += " selected";
+      html.push("<button type=\"button\" class=\"" + cls + "\" data-date=\"" + iso + "\" data-event-id=\"" + (ev ? ev.id : "") + "\">" + String(d) + "</button>");
+    }
+    calendarGrid.innerHTML = html.join("");
+    Array.prototype.forEach.call(calendarGrid.querySelectorAll(".calendar-day:not(.empty)"), function (btn) {
+      btn.addEventListener("click", function () {
+        calendarState.selectedDate = btn.getAttribute("data-date");
+        var evId = btn.getAttribute("data-event-id");
+        calendarState.selectedEventId = evId ? parseInt(evId, 10) : null;
+        openCalendarForm();
+        renderCalendarGrid();
+      });
+    });
+  }
+
+  function openCalendarForm() {
+    if (!calendarFormWrap || !calendarDateInput || !calendarTypeInput || !calendarFormActions) return;
+    calendarFormWrap.style.display = "block";
+    calendarFormStatus.textContent = "";
+    calendarDateInput.value = calendarState.selectedDate || "";
+    calendarTypeInput.value = calendarState.eventType === "vaccination" ? "вакцинация" : "сезонная обработка";
+    var existing = (calendarState.events || []).find(function (e) { return Number(e.id) === Number(calendarState.selectedEventId); });
+    calendarNoteInput.value = existing ? (existing.note || "") : "";
+    renderCalendarFormActions(!!existing);
+  }
+
+  function renderCalendarFormActions(isEdit) {
+    if (!calendarFormActions) return;
+    if (!isEdit) {
+      calendarFormActions.innerHTML =
+        "<button type=\"button\" class=\"primary-action\" id=\"calendarAddBtn\">Добавить</button>" +
+        "<button type=\"button\" id=\"calendarCancelBtn\">Отменить</button>";
+      var addBtn = document.getElementById("calendarAddBtn");
+      var cancelBtn = document.getElementById("calendarCancelBtn");
+      addBtn && addBtn.addEventListener("click", submitCalendarCreate);
+      cancelBtn && cancelBtn.addEventListener("click", closeCalendarForm);
+    } else {
+      calendarFormActions.innerHTML =
+        "<button type=\"button\" class=\"primary-action\" id=\"calendarEditBtn\">Изменить</button>" +
+        "<button type=\"button\" id=\"calendarCancelBtn\">Отменить</button>";
+      var editBtn = document.getElementById("calendarEditBtn");
+      var cancelBtn2 = document.getElementById("calendarCancelBtn");
+      editBtn && editBtn.addEventListener("click", function () {
+        renderCalendarFormActionsSave();
+      });
+      cancelBtn2 && cancelBtn2.addEventListener("click", closeCalendarForm);
+    }
+  }
+
+  function renderCalendarFormActionsSave() {
+    if (!calendarFormActions) return;
+    calendarFormActions.innerHTML =
+      "<button type=\"button\" class=\"primary-action\" id=\"calendarSaveBtn\">Сохранить</button>" +
+      "<button type=\"button\" id=\"calendarCancelBtn\">Отменить</button>";
+    var saveBtn = document.getElementById("calendarSaveBtn");
+    var cancelBtn = document.getElementById("calendarCancelBtn");
+    saveBtn && saveBtn.addEventListener("click", submitCalendarUpdate);
+    cancelBtn && cancelBtn.addEventListener("click", closeCalendarForm);
+  }
+
+  function closeCalendarForm() {
+    if (calendarFormWrap) calendarFormWrap.style.display = "none";
+    calendarState.selectedDate = null;
+    calendarState.selectedEventId = null;
+    renderCalendarGrid();
+  }
+
+  function loadCalendarEvents() {
+    if (!getToken() || !selectedCabinetPetId) return;
+    fetch(API + "/calendar/events?pet_id=" + encodeURIComponent(String(selectedCabinetPetId)), { headers: authHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        calendarState.events = res && res.ok ? (res.items || []) : [];
+        renderCalendarGrid();
+      })
+      .catch(function () {
+        calendarState.events = [];
+        renderCalendarGrid();
+      });
+  }
+
+  function submitCalendarCreate() {
+    if (!selectedCabinetPetId || !calendarDateInput || !calendarNoteInput) return;
+    fetch(API + "/calendar/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({
+        pet_id: selectedCabinetPetId,
+        event_type: calendarState.eventType,
+        event_date: calendarDateInput.value,
+        note: calendarNoteInput.value || "",
+      }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok) {
+          alert((res && res.error) || "Не удалось добавить событие");
+          return;
+        }
+        if (calendarFormActions) calendarFormActions.innerHTML = "";
+        if (calendarFormStatus) calendarFormStatus.textContent = "Добавлено!";
+        loadCalendarEvents();
+      })
+      .catch(function () { alert("Ошибка сети"); });
+  }
+
+  function submitCalendarUpdate() {
+    if (!selectedCabinetPetId || !calendarState.selectedEventId || !calendarDateInput || !calendarNoteInput) return;
+    fetch(API + "/calendar/events/" + encodeURIComponent(String(calendarState.selectedEventId)), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({
+        pet_id: selectedCabinetPetId,
+        event_type: calendarState.eventType,
+        event_date: calendarDateInput.value,
+        note: calendarNoteInput.value || "",
+      }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok) {
+          alert((res && res.error) || "Не удалось сохранить событие");
+          return;
+        }
+        if (calendarFormActions) calendarFormActions.innerHTML = "";
+        if (calendarFormStatus) calendarFormStatus.textContent = "Сохранено!";
+        loadCalendarEvents();
+      })
+      .catch(function () { alert("Ошибка сети"); });
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    var padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    var rawData = window.atob(base64);
+    var outputArray = new Uint8Array(rawData.length);
+    for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+  }
+
+  function subscribePushWithCurrentUser() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      alert("Push-уведомления не поддерживаются на этом устройстве");
+      return;
+    }
+    fetch(API + "/push/public-key", { headers: authHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok || !res.publicKey) throw new Error("VAPID ключ не настроен");
+        return navigator.serviceWorker.ready.then(function (reg) {
+          return reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(res.publicKey),
+          });
+        });
+      })
+      .then(function (sub) {
+        return fetch(API + "/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(sub.toJSON()),
+        });
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok) throw new Error((res && res.error) || "subscribe failed");
+        if (calendarNotifyConfig) calendarNotifyConfig.style.display = "block";
+      })
+      .catch(function (e) {
+        alert("Не удалось включить уведомления: " + (e && e.message ? e.message : "ошибка"));
+      });
+  }
+
+  function loadPushSettings() {
+    if (!getToken()) return;
+    fetch(API + "/push/settings", { headers: authHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok || !res.settings) return;
+        calendarState.notifyOffset = Number(res.settings.notify_offset_days || 7);
+        calendarState.notifyEnabled = Number(res.settings.enabled || 0);
+        if (calendarNotifyConfig) calendarNotifyConfig.style.display = calendarState.notifyEnabled ? "block" : "none";
+        Array.prototype.forEach.call(calendarNotifyChips || [], function (chip) {
+          var off = Number(chip.getAttribute("data-offset") || "7");
+          chip.classList.toggle("active", off === calendarState.notifyOffset);
+        });
+      })
+      .catch(function () {});
+  }
+
+  if (calendarEnableNotificationsBtn) {
+    calendarEnableNotificationsBtn.addEventListener("click", function () {
+      subscribePushWithCurrentUser();
+    });
+  }
+  Array.prototype.forEach.call(calendarNotifyChips || [], function (chip) {
+    chip.addEventListener("click", function () {
+      var off = Number(chip.getAttribute("data-offset") || "7");
+      fetch(API + "/push/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ enabled: true, notify_offset_days: off }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (!res || !res.ok) return;
+          calendarState.notifyOffset = off;
+          calendarState.notifyEnabled = 1;
+          Array.prototype.forEach.call(calendarNotifyChips, function (c) {
+            c.classList.toggle("active", c === chip);
+          });
+        })
+        .catch(function () {});
+    });
+  });
 
   // Открытие сохранённого кейса из истории
   function openHistoryCase(caseId) {
@@ -922,7 +1478,7 @@
         return;
       }
       var petName = (fd.get("name") || "").toString();
-      var petBreed = ""; // поле породы можно добавить позже
+      var petBreed = (fd.get("breed") || "").toString().trim();
       var emailVal = (fd.get("email") || "").toString();
       if (petName) localStorage.setItem("vetguardian_pet_name", petName);
       if (emailVal) localStorage.setItem("vetguardian_email", emailVal);
@@ -2311,11 +2867,19 @@
 
       function collectSlides() {
         slides = [];
+        var useMobileSlideTitles = mq && mq.matches;
         list.querySelectorAll(".vg-ai-check-item").forEach(function (li) {
           var st = li.querySelector(".vg-ai-check-short");
           var lg = li.querySelector(".vg-ai-check-long");
+          var mobileAlt = st && st.getAttribute("data-slide-title-mobile");
+          var title =
+            st && useMobileSlideTitles && mobileAlt && String(mobileAlt).trim()
+              ? String(mobileAlt).trim()
+              : st
+                ? st.textContent.trim()
+                : "";
           slides.push({
-            title: st ? st.textContent.trim() : "",
+            title: title,
             text: lg ? lg.textContent.trim() : "",
           });
         });

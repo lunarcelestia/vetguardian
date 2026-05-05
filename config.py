@@ -36,3 +36,8 @@ class Config:
     # Требования: запущенный Ollama на машине, где крутится Flask.
     OLLAMA_BASE_URL = (os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434").strip().rstrip("/")
     OLLAMA_MODEL = (os.environ.get("OLLAMA_MODEL") or "llama3.1:8b-instruct").strip()
+
+    # Web Push (VAPID)
+    VAPID_PUBLIC_KEY = (os.environ.get("VAPID_PUBLIC_KEY") or "").strip()
+    VAPID_PRIVATE_KEY = (os.environ.get("VAPID_PRIVATE_KEY") or "").strip()
+    VAPID_CLAIMS_SUBJECT = (os.environ.get("VAPID_CLAIMS_SUBJECT") or "mailto:admin@vetguardian.local").strip()

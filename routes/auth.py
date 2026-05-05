@@ -50,6 +50,13 @@ def register():
                 (email, hash_password(password), name or None),
             )
             user_id = cur.lastrowid
+            # Создаем первого питомца сразу при регистрации, чтобы кабинет
+            # и выбор питомца в опроснике были доступны без доп. шагов.
+            pet_breed = (data.get("breed") or "").strip()
+            conn.execute(
+                "INSERT INTO pets (user_id, name, species, breed) VALUES (?, ?, ?, ?)",
+                (user_id, name or "Питомец", "dog", pet_breed or None),
+            )
         token = encode_token(user_id)
         return jsonify({"ok": True, "token": token, "user_id": user_id})
     except Exception as e:

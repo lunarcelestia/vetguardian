@@ -571,6 +571,10 @@
             <form id="questionnaireForm">
         <div class="block block-step active" data-step="1">
           <h2>БЛОК 1: ИНФОРМАЦИЯ О ПИТОМЦЕ</h2>
+          <div class="form-group" id="questionnairePetSelectorWrap" style="display:none;">
+            <span class="label">Выберите вашего питомца</span>
+            <div class="pet-choice-buttons" id="questionnairePetSelector"></div>
+          </div>
           <p class="form-group" style="font-weight:normal;">Этот блок нужен, чтобы AI учитывал индивидуальные особенности.</p>
           <div class="form-group">
             <span class="label">1. Порода</span>
@@ -936,19 +940,100 @@
       <button type="button" class="cabinet-close-btn" id="cabinetCloseBtn" aria-label="Закрыть личный кабинет">×</button>
       <div class="cabinet-passport-left">
         <h2 class="cabinet-title">ЛИЧНЫЙ КАБИНЕТ</h2>
+        <div class="cabinet-pets-switcher" id="cabinetPetsSwitcher"></div>
         <div class="cabinet-photo-wrap">
-          <img src="https://s.fotora.ru/0e7c61dbf76dff54.jpeg" alt="Питомец" class="cabinet-photo">
+          <img src="https://s.fotora.ru/0e7c61dbf76dff54.jpeg" alt="Питомец" class="cabinet-photo" id="cabinetPetPhoto">
+          <button type="button" class="cabinet-change-photo-btn" id="cabinetChangePetPhotoBtn">Изменить фото</button>
+        </div>
+        <div class="cabinet-photo-actions">
+          <button type="button" class="cabinet-secondary-btn" id="cabinetUploadPetPhotoBtn">Загрузить фото питомца</button>
+          <input type="file" id="cabinetPetPhotoInput" accept="image/*" style="display:none;">
         </div>
         <p class="cabinet-field">Кличка: <span id="cabinetPetName">—</span></p>
+        <p class="cabinet-field">Порода: <span id="cabinetPetBreed">—</span></p>
         <p class="cabinet-field">Email: <span id="cabinetEmail">—</span></p>
       </div>
       <div class="cabinet-passport-right">
-        <h3 class="cabinet-history-title">История болезни</h3>
+        <h3 class="cabinet-history-title">История обследований</h3>
         <ul class="cabinet-history-list" id="cabinetHistoryList"></ul>
       </div>
-      <button type="button" class="cabinet-logout-btn" id="cabinetLogoutBtn">Выйти из аккаунта</button>
+      <div class="cabinet-actions-row">
+        <button type="button" class="cabinet-secondary-btn" id="cabinetCalendarBtn">Календарь</button>
+        <button type="button" class="cabinet-secondary-btn" id="cabinetAddPetBtn">Добавить питомца</button>
+      </div>
+      <div class="cabinet-actions-row cabinet-actions-row--logout">
+        <button type="button" class="cabinet-logout-btn" id="cabinetLogoutBtn">Выйти из аккаунта</button>
+      </div>
     </div>
   </section>
+
+  <div class="modal-backdrop" id="calendarModal">
+    <div class="modal-box calendar-modal-box">
+      <button type="button" class="cabinet-close-btn calendar-close-btn" id="calendarCloseBtn" aria-label="Закрыть календарь">×</button>
+      <h3 class="calendar-title">КАЛЕНДАРЬ</h3>
+      <p class="calendar-desc">Здесь вы можете отмечать даты ежегодной вакцинации, сезонных обработок вашего питомца.</p>
+      <p class="calendar-desc calendar-desc-pwa" id="calendarPwaDesc" style="display:none;">Вы можете включить уведомления, чтобы всегда знать, когда нужно позаботиться о здоровье вашего друга!</p>
+      <button type="button" class="cabinet-secondary-btn calendar-enable-btn" id="calendarEnableNotificationsBtn" style="display:none;">Вкл. уведомления</button>
+      <div class="calendar-notify-config" id="calendarNotifyConfig" style="display:none;">
+        <p class="calendar-notify-label">Выберите, за сколько необходимо вас уведомить о предстоящей процедуре:</p>
+        <div class="calendar-notify-options">
+          <button type="button" class="calendar-notify-chip" data-offset="30">За месяц</button>
+          <button type="button" class="calendar-notify-chip" data-offset="7">На неделю</button>
+          <button type="button" class="calendar-notify-chip" data-offset="1">За день</button>
+        </div>
+      </div>
+
+      <div class="calendar-type-tabs">
+        <button type="button" class="calendar-type-tab active" data-event-type="vaccination">Прививки</button>
+        <button type="button" class="calendar-type-tab" data-event-type="treatment">Обработки</button>
+      </div>
+
+      <div class="calendar-picker-row">
+        <select id="calendarMonthSelect"></select>
+        <select id="calendarYearSelect"></select>
+      </div>
+      <div class="calendar-weekdays" id="calendarWeekdays"></div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+
+      <div class="calendar-form-wrap" id="calendarFormWrap" style="display:none;">
+        <h4>ДОБАВИТЬ ДАТУ</h4>
+        <div class="calendar-form-grid">
+          <label>Дата:
+            <input type="date" id="calendarDateInput">
+          </label>
+          <label>Тип:
+            <input type="text" id="calendarTypeInput" readonly>
+          </label>
+        </div>
+        <label>Доп. информация:
+          <textarea id="calendarNoteInput" rows="3" placeholder="Введите дополнительную информацию"></textarea>
+        </label>
+        <div class="calendar-form-actions" id="calendarFormActions"></div>
+        <div class="calendar-form-status" id="calendarFormStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="addPetModal">
+    <div class="modal-box">
+      <h3>Добавить питомца</h3>
+      <form id="addPetForm">
+        <div class="form-group">
+          <label>Кличка питомца</label>
+          <input type="text" name="name" required>
+        </div>
+        <div class="form-group">
+          <label>Порода</label>
+          <p class="form-subhint">Если питомец беспородный, оставьте поле пустым.</p>
+          <input type="text" name="breed" placeholder="Укажите породу">
+        </div>
+        <div class="buttons">
+          <button type="submit" class="primary">Сохранить</button>
+          <button type="button" class="secondary" id="closeAddPetModal">Закрыть</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Модальное окно: Вход / Регистрация -->
   <div class="modal-backdrop" id="authModal">
@@ -958,7 +1043,6 @@
         <button type="button" data-tab="register">Регистрация</button>
       </div>
       <div id="loginTab">
-        <h3>Вход</h3>
         <form id="loginForm">
           <div class="form-group">
             <label>Email</label>
@@ -975,11 +1059,15 @@
         </form>
       </div>
       <div id="registerTab" style="display:none;">
-        <h3>Регистрация</h3>
         <form id="registerForm">
           <div class="form-group">
             <label>Имя питомца</label>
             <input type="text" name="name" placeholder="Кличка питомца">
+          </div>
+          <div class="form-group">
+            <label>Порода питомца</label>
+            <p class="form-subhint">Если питомец беспородный, оставьте поле пустым.</p>
+            <input type="text" name="breed" placeholder="Укажите породу">
           </div>
           <div class="form-group">
             <label>Почта</label>
@@ -1002,7 +1090,7 @@
     </div>
   </div>
 
-  <script src="/js/app.js?v=20"></script>
+  <script src="/js/app.js?v=26"></script>
   <script src="/js/ai-assistant.js?v=2"></script>
   <script>
     (function () {

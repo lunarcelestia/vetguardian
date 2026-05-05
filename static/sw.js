@@ -1,5 +1,5 @@
 /* VetGuardian Service Worker — shell + network-first, API без кеша */
-const CACHE_NAME = "vetguardian-v13";
+const CACHE_NAME = "vetguardian-v14";
 
 const PRECACHE_URLS = [
   "/",
@@ -10,7 +10,7 @@ const PRECACHE_URLS = [
   "/css/design.css?v=17",
   "/css/ai-assistant.css?v=19",
   "/css/offline.css?v=3",
-  "/js/app.js?v=20",
+  "/js/app.js?v=26",
   "/js/ai-assistant.js?v=2",
   "/js/knowledge_match.js?v=1",
   "/js/offline.js?v=7",
@@ -126,5 +126,39 @@ self.addEventListener("fetch", (event) => {
           return Response.error();
         })
       )
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = {};
+  }
+  const title = data.title || "VetGuardian";
+  const body = data.body || "Напоминание о процедуре питомца.";
+  const url = data.url || "/";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/pictures/new_logo.png",
+      badge: "/pictures/new_logo_without_text.png",
+      data: { url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(targetUrl) && "focus" in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+      return null;
+    })
   );
 });

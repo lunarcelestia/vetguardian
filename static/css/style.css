@@ -657,6 +657,12 @@ body {
 .modal-backdrop.open {
   display: flex;
 }
+#addPetModal {
+  z-index: 260;
+}
+#calendarModal {
+  z-index: 270;
+}
 
 .modal-box {
   background: var(--bg);
@@ -674,6 +680,12 @@ body {
 
 .modal-box .form-group {
   margin-bottom: 14px;
+}
+.modal-box .form-subhint {
+  margin: -2px 0 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .modal-box .buttons {
@@ -787,15 +799,45 @@ body {
   width: 220px;
   height: 220px;
   border-radius: 20px;
-  overflow: hidden;
+  overflow: visible;
   border: 2px solid var(--gray-light);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
   margin-bottom: 16px;
+  position: relative;
 }
 .cabinet-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
+.cabinet-change-photo-btn {
+  position: absolute;
+  right: -104px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-6px);
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-light);
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.28s ease, transform 0.28s ease, visibility 0s linear 0.35s;
+}
+.cabinet-photo-wrap.has-custom-photo:hover .cabinet-change-photo-btn,
+.cabinet-photo-wrap.has-custom-photo .cabinet-change-photo-btn:focus-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+  transition-delay: 0s, 0s, 0s;
 }
 
 .cabinet-field {
@@ -804,6 +846,58 @@ body {
 }
 .cabinet-field span {
   font-weight: 600;
+}
+
+.cabinet-pets-switcher,
+.pet-choice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cabinet-pet-chip,
+.pet-choice-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.cabinet-pet-chip:hover,
+.cabinet-pet-chip.active,
+.pet-choice-btn:hover,
+.pet-choice-btn.active {
+  background: #38bdf8;
+  color: #fff;
+  border-color: #0ea5e9;
+  transform: scale(1.04);
+}
+
+.cabinet-photo-actions {
+  margin-bottom: 12px;
+}
+
+.cabinet-secondary-btn {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-light);
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cabinet-secondary-btn:hover {
+  background: var(--pastel);
 }
 
 .cabinet-passport-right {
@@ -830,9 +924,29 @@ body {
   padding: 10px 4px;
   border-bottom: 1px solid var(--gray-light);
   font-size: 14px;
+  cursor: default;
 }
 .cabinet-history-list li:last-child {
   border-bottom: none;
+}
+.cabinet-empty-history {
+  text-align: left;
+  line-height: 1.45;
+}
+.cabinet-empty-history-btn {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--sky-dark);
+  background: #fff;
+  color: var(--sky-dark);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cabinet-empty-history-btn:hover {
+  background: var(--pastel);
 }
 .cabinet-history-list .date { color: var(--text-muted); font-size: 12px; }
 .cabinet-history-list .level.green { color: var(--danger-green); }
@@ -851,13 +965,34 @@ body {
     padding-bottom: 20px;
     margin-bottom: 8px;
   }
+  .cabinet-change-photo-btn {
+    right: 8px;
+    top: auto;
+    bottom: 8px;
+    transform: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .cabinet-photo-wrap.has-custom-photo .cabinet-change-photo-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 /* Кнопка выхода из аккаунта в правом нижнем углу паспорта */
-.cabinet-logout-btn {
+.cabinet-actions-row {
   position: absolute;
   right: 32px;
-  bottom: 24px;
+  bottom: 66px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cabinet-actions-row--logout {
+  bottom: 14px;
+}
+
+.cabinet-logout-btn {
   padding: 10px 24px;
   border-radius: 999px;
   border: 1px solid var(--gray-light);
@@ -873,14 +1008,190 @@ body {
 }
 
 /* Ховер по элементам истории в кабинете */
-.cabinet-history-list li {
+.cabinet-history-list li[data-case-id] {
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
-.cabinet-history-list li:hover {
+.cabinet-history-list li[data-case-id]:hover {
   transform: scale(1.02);
   background-color: rgba(148, 163, 184, 0.08);
 }
 
 /* Скрытие главной при показе кабинета */
 .main-content.hidden { display: none; }
+
+@media (max-width: 768px) {
+  .cabinet-actions-row {
+    position: static;
+    margin-top: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .cabinet-actions-row--logout {
+    margin-top: 6px;
+  }
+}
+
+.calendar-modal-box {
+  max-width: 760px;
+  position: relative;
+}
+.calendar-close-btn {
+  top: 12px;
+  right: 12px;
+}
+.calendar-title {
+  text-align: center;
+  margin-bottom: 10px;
+}
+.calendar-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.calendar-enable-btn {
+  margin-bottom: 10px;
+}
+.calendar-notify-label {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.calendar-notify-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.calendar-notify-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-light);
+  background: #fff;
+  cursor: pointer;
+}
+.calendar-notify-chip.active {
+  background: #38bdf8;
+  color: #fff;
+  border-color: #0ea5e9;
+}
+.calendar-type-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 12px;
+}
+.calendar-type-tab {
+  flex: 1;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-light);
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.calendar-type-tab.active {
+  background: #38bdf8;
+  color: #fff;
+  border-color: #0ea5e9;
+}
+.calendar-picker-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.calendar-picker-row select {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--gray-light);
+}
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+.calendar-weekdays {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.calendar-day {
+  width: 38px;
+  height: 38px;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.calendar-day:hover,
+.calendar-day.selected,
+.calendar-day.has-event {
+  background: #38bdf8;
+  color: #fff;
+  transform: scale(1.06);
+}
+.calendar-day.empty {
+  visibility: hidden;
+}
+.calendar-form-wrap {
+  margin-top: 14px;
+  border: 1px solid var(--gray-light);
+  border-radius: 14px;
+  padding: 12px;
+  animation: fadeIn 0.25s ease;
+}
+.calendar-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.calendar-form-wrap input,
+.calendar-form-wrap textarea {
+  width: 100%;
+  margin-top: 4px;
+  border: 1px solid var(--gray-light);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: var(--font);
+}
+.calendar-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.calendar-form-actions button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--gray-light);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+.calendar-form-actions button.primary-action {
+  background: #38bdf8;
+  color: #fff;
+  border-color: #0ea5e9;
+}
+.calendar-form-actions button:hover {
+  transform: scale(1.03);
+}
+.calendar-form-status {
+  margin-top: 8px;
+  font-weight: 700;
+  color: #0ea5e9;
+}
+
+@media (max-width: 768px) {
+  .calendar-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .calendar-day {
+    width: 34px;
+    height: 34px;
+  }
+}

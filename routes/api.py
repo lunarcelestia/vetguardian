@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 import requests
@@ -280,15 +281,60 @@ def analyze():
     if not primary_concern:
         return jsonify({"ok": False, "error": "Укажите основную проблему, вызывающую беспокойство."}), 400
 
-    kb_result = evaluate(answers, primary_concern=primary_concern)
+    user_id = get_user_from_request()
+    pet_id = data.get("pet_id")
+    pet_history_rows = []
+    pet_history_text = ""
+    try:
+        pet_id = int(pet_id) if pet_id is not None else None
+    except (TypeError, ValueError):
+        pet_id = None
+
+    if user_id and pet_id:
+        try:
+            with get_connection() as conn:
+                pet_ok = conn.execute(
+                    "SELECT id FROM pets WHERE id = ? AND user_id = ?",
+                    (pet_id, user_id),
+                ).fetchone()
+                if pet_ok:
+                    pet_history_rows = conn.execute(
+                        """SELECT danger_level, result_summary, created_at
+                           FROM cases
+                           WHERE user_id = ? AND pet_id = ?
+                           ORDER BY created_at DESC
+                           LIMIT 5""",
+                        (user_id, pet_id),
+                    ).fetchall()
+        except Exception:
+            pet_history_rows = []
+
+    if pet_history_rows:
+        lines = []
+        for row in pet_history_rows:
+            lines.append(
+                f"- [{row['created_at']}] уровень: {row['danger_level']}; {row['result_summary'] or ''}"
+            )
+        pet_history_text = "История обследований этого питомца:\n" + "\n".join(lines)
+
+    kb_primary = primary_concern
+    if pet_history_text:
+        # Для медицинской БЗ добавляем контекст прошлых посещений выбранного питомца.
+        kb_primary = primary_concern + "\n\n" + pet_history_text
+
+    kb_result = evaluate(answers, primary_concern=kb_primary)
     kb_danger_level = kb_result.get("danger_level", "yellow")
     summary = kb_result.get("summary", "")
     conditions = kb_result.get("conditions", [])
     immediate_actions = kb_result.get("immediate_actions", [])
 
+    ai_extra_text = extra_text
+    if pet_history_text:
+        ai_extra_text = (extra_text + "\n\n" + pet_history_text).strip()
+
     ai_report = get_ai_report(
         answers,
-        extra_text=extra_text,
+        extra_text=ai_extra_text,
         primary_concern=primary_concern,
         photos_base64=photos,
     )
@@ -303,7 +349,6 @@ def analyze():
     else:
         danger_level = kb_danger_level
 
-    user_id = get_user_from_request()
     try:
         with get_connection() as conn:
             # сохраняем кейс в историю только для авторизованных пользователей
@@ -313,12 +358,13 @@ def analyze():
                        VALUES (?, ?, ?, ?, ?, ?)""",
                     (
                         user_id,
-                        data.get("pet_id"),
+                        pet_id,
                         json.dumps(
                             {
                                 "answers": answers,
                                 "extra_text": extra_text,
                                 "primary_concern": primary_concern,
+                                "history_context_used": bool(pet_history_text),
                                 "photos_count": len(photos),
                             },
                             ensure_ascii=False,
@@ -794,16 +840,331 @@ def me():
         },
     })
 
-@api_bp.route("/api/history", methods=["GET"])
-def history():
+
+@api_bp.route("/api/pets", methods=["GET"])
+def pets_list():
     user_id = get_user_from_request()
     if not user_id:
         return jsonify({"ok": False, "items": []}), 401
     with get_connection() as conn:
         rows = conn.execute(
-            """SELECT id, pet_id, danger_level, result_summary, result_details, created_at
-               FROM cases WHERE user_id = ? ORDER BY created_at DESC LIMIT 50""",
+            """SELECT id, name, species, breed, photo_data, created_at
+               FROM pets
+               WHERE user_id = ?
+               ORDER BY created_at ASC, id ASC""",
             (user_id,),
+        ).fetchall()
+    items = []
+    for r in rows:
+        items.append({
+            "id": r["id"],
+            "name": r["name"] or "Питомец",
+            "species": r["species"] or "dog",
+            "breed": r["breed"] or "",
+            "photo_data": r["photo_data"] or "",
+            "created_at": r["created_at"],
+        })
+    return jsonify({"ok": True, "items": items})
+
+
+@api_bp.route("/api/pets", methods=["POST"])
+def pets_create():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    breed = (data.get("breed") or "").strip()
+    if not name:
+        return jsonify({"ok": False, "error": "Укажите кличку питомца"}), 400
+    with get_connection() as conn:
+        cur = conn.execute(
+            """INSERT INTO pets (user_id, name, species, breed)
+               VALUES (?, ?, ?, ?)""",
+            (user_id, name, "dog", breed or None),
+        )
+        pet_id = cur.lastrowid
+    return jsonify({"ok": True, "pet_id": pet_id})
+
+
+@api_bp.route("/api/pets/<int:pet_id>/photo", methods=["POST"])
+def pets_photo_update(pet_id: int):
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    data = request.get_json() or {}
+    photo_data = (data.get("photo_data") or "").strip()
+    if not photo_data:
+        return jsonify({"ok": False, "error": "Фото не передано"}), 400
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT id FROM pets WHERE id = ? AND user_id = ?",
+            (pet_id, user_id),
+        ).fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": "Питомец не найден"}), 404
+        conn.execute(
+            "UPDATE pets SET photo_data = ? WHERE id = ?",
+            (photo_data, pet_id),
+        )
+    return jsonify({"ok": True})
+
+
+@api_bp.route("/api/calendar/events", methods=["GET"])
+def calendar_events_list():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "items": []}), 401
+    pet_id = request.args.get("pet_id")
+    event_type = (request.args.get("event_type") or "").strip().lower()
+    with get_connection() as conn:
+        query = """SELECT id, user_id, pet_id, event_type, event_date, note, created_at, updated_at
+                   FROM calendar_events WHERE user_id = ?"""
+        params = [user_id]
+        if pet_id:
+            try:
+                params.append(int(pet_id))
+                query += " AND pet_id = ?"
+            except (TypeError, ValueError):
+                return jsonify({"ok": False, "items": [], "error": "Некорректный pet_id"}), 400
+        if event_type in ("vaccination", "treatment"):
+            query += " AND event_type = ?"
+            params.append(event_type)
+        query += " ORDER BY event_date ASC, id ASC"
+        rows = conn.execute(query, tuple(params)).fetchall()
+    items = []
+    for r in rows:
+        items.append({
+            "id": r["id"],
+            "pet_id": r["pet_id"],
+            "event_type": r["event_type"],
+            "event_date": r["event_date"],
+            "note": r["note"] or "",
+            "created_at": r["created_at"],
+            "updated_at": r["updated_at"],
+        })
+    return jsonify({"ok": True, "items": items})
+
+
+@api_bp.route("/api/calendar/events", methods=["POST"])
+def calendar_events_create():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    data = request.get_json() or {}
+    try:
+        pet_id = int(data.get("pet_id"))
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "Некорректный pet_id"}), 400
+    event_type = (data.get("event_type") or "").strip().lower()
+    event_date = (data.get("event_date") or "").strip()
+    note = (data.get("note") or "").strip()
+    if event_type not in ("vaccination", "treatment"):
+        return jsonify({"ok": False, "error": "Некорректный тип события"}), 400
+    try:
+        datetime.strptime(event_date, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"ok": False, "error": "Некорректная дата"}), 400
+    with get_connection() as conn:
+        pet = conn.execute(
+            "SELECT id FROM pets WHERE id = ? AND user_id = ?",
+            (pet_id, user_id),
+        ).fetchone()
+        if not pet:
+            return jsonify({"ok": False, "error": "Питомец не найден"}), 404
+        cur = conn.execute(
+            """INSERT INTO calendar_events (user_id, pet_id, event_type, event_date, note)
+               VALUES (?, ?, ?, ?, ?)""",
+            (user_id, pet_id, event_type, event_date, note or None),
+        )
+        event_id = cur.lastrowid
+    return jsonify({"ok": True, "event_id": event_id})
+
+
+@api_bp.route("/api/calendar/events/<int:event_id>", methods=["PUT"])
+def calendar_events_update(event_id: int):
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    data = request.get_json() or {}
+    try:
+        pet_id = int(data.get("pet_id"))
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "Некорректный pet_id"}), 400
+    event_type = (data.get("event_type") or "").strip().lower()
+    event_date = (data.get("event_date") or "").strip()
+    note = (data.get("note") or "").strip()
+    if event_type not in ("vaccination", "treatment"):
+        return jsonify({"ok": False, "error": "Некорректный тип события"}), 400
+    try:
+        datetime.strptime(event_date, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"ok": False, "error": "Некорректная дата"}), 400
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT id FROM calendar_events WHERE id = ? AND user_id = ?",
+            (event_id, user_id),
+        ).fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": "Событие не найдено"}), 404
+        pet = conn.execute(
+            "SELECT id FROM pets WHERE id = ? AND user_id = ?",
+            (pet_id, user_id),
+        ).fetchone()
+        if not pet:
+            return jsonify({"ok": False, "error": "Питомец не найден"}), 404
+        conn.execute(
+            """UPDATE calendar_events
+               SET pet_id = ?, event_type = ?, event_date = ?, note = ?, updated_at = datetime('now')
+               WHERE id = ? AND user_id = ?""",
+            (pet_id, event_type, event_date, note or None, event_id, user_id),
+        )
+    return jsonify({"ok": True})
+
+
+@api_bp.route("/api/calendar/events/<int:event_id>", methods=["DELETE"])
+def calendar_events_delete(event_id: int):
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    with get_connection() as conn:
+        conn.execute(
+            "DELETE FROM calendar_events WHERE id = ? AND user_id = ?",
+            (event_id, user_id),
+        )
+    return jsonify({"ok": True})
+
+
+@api_bp.route("/api/push/public-key", methods=["GET"])
+def push_public_key():
+    return jsonify({"ok": True, "publicKey": getattr(Config, "VAPID_PUBLIC_KEY", "") or ""})
+
+
+@api_bp.route("/api/push/settings", methods=["GET"])
+def push_settings_get():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT notify_offset_days, enabled FROM user_notification_settings WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+    if not row:
+        return jsonify({"ok": True, "settings": {"notify_offset_days": 7, "enabled": 0}})
+    return jsonify(
+        {
+            "ok": True,
+            "settings": {
+                "notify_offset_days": row["notify_offset_days"] or 7,
+                "enabled": row["enabled"] or 0,
+            },
+        }
+    )
+
+
+@api_bp.route("/api/push/settings", methods=["POST"])
+def push_settings_set():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    data = request.get_json() or {}
+    try:
+        offset = int(data.get("notify_offset_days", 7))
+    except (TypeError, ValueError):
+        offset = 7
+    if offset not in (1, 7, 30):
+        offset = 7
+    enabled = 1 if bool(data.get("enabled")) else 0
+    with get_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO user_notification_settings (user_id, notify_offset_days, enabled, updated_at)
+            VALUES (?, ?, ?, datetime('now'))
+            ON CONFLICT(user_id) DO UPDATE SET
+                notify_offset_days = excluded.notify_offset_days,
+                enabled = excluded.enabled,
+                updated_at = datetime('now')
+            """,
+            (user_id, offset, enabled),
+        )
+    return jsonify({"ok": True})
+
+
+@api_bp.route("/api/push/subscribe", methods=["POST"])
+def push_subscribe():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    data = request.get_json() or {}
+    endpoint = (data.get("endpoint") or "").strip()
+    keys = data.get("keys") or {}
+    p256dh = (keys.get("p256dh") or "").strip()
+    auth_key = (keys.get("auth") or "").strip()
+    if not endpoint or not p256dh or not auth_key:
+        return jsonify({"ok": False, "error": "Некорректная подписка"}), 400
+    user_agent = (request.headers.get("User-Agent") or "")[:255]
+    with get_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, last_seen_at, is_active)
+            VALUES (?, ?, ?, ?, ?, datetime('now'), 1)
+            ON CONFLICT(user_id, endpoint) DO UPDATE SET
+                p256dh = excluded.p256dh,
+                auth = excluded.auth,
+                user_agent = excluded.user_agent,
+                last_seen_at = datetime('now'),
+                is_active = 1
+            """,
+            (user_id, endpoint, p256dh, auth_key, user_agent),
+        )
+    return jsonify({"ok": True})
+
+
+@api_bp.route("/api/push/unsubscribe", methods=["POST"])
+def push_unsubscribe():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "error": "Требуется авторизация"}), 401
+    data = request.get_json() or {}
+    endpoint = (data.get("endpoint") or "").strip()
+    if not endpoint:
+        return jsonify({"ok": False, "error": "Endpoint обязателен"}), 400
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE push_subscriptions SET is_active = 0 WHERE user_id = ? AND endpoint = ?",
+            (user_id, endpoint),
+        )
+    return jsonify({"ok": True})
+
+@api_bp.route("/api/history", methods=["GET"])
+def history():
+    user_id = get_user_from_request()
+    if not user_id:
+        return jsonify({"ok": False, "items": []}), 401
+    pet_id_filter = request.args.get("pet_id")
+    with get_connection() as conn:
+        pet_map = {
+            p["id"]: p["name"] or "Питомец"
+            for p in conn.execute(
+                "SELECT id, name FROM pets WHERE user_id = ?",
+                (user_id,),
+            ).fetchall()
+        }
+        query = """SELECT id, pet_id, danger_level, result_summary, result_details, created_at
+               FROM cases WHERE user_id = ?"""
+        params = [user_id]
+        if pet_id_filter is not None and str(pet_id_filter).strip() != "":
+            try:
+                pet_id_int = int(pet_id_filter)
+            except (TypeError, ValueError):
+                return jsonify({"ok": False, "items": [], "error": "Некорректный pet_id"}), 400
+            query += " AND pet_id = ?"
+            params.append(pet_id_int)
+        query += " ORDER BY created_at DESC LIMIT 50"
+        rows = conn.execute(
+            query,
+            tuple(params),
         ).fetchall()
 
     items = []
@@ -841,6 +1202,7 @@ def history():
         items.append({
             "id": r["id"],
             "pet_id": r["pet_id"],
+            "pet_name": pet_map.get(r["pet_id"], "Питомец") if r["pet_id"] else "Питомец",
             "danger_level": r["danger_level"],
             "summary": short[:200],
             "created_at": r["created_at"],
