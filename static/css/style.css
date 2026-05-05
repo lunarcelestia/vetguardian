@@ -660,9 +660,6 @@ body {
 #addPetModal {
   z-index: 260;
 }
-#calendarModal {
-  z-index: 270;
-}
 
 .modal-box {
   background: var(--bg);
@@ -742,7 +739,7 @@ body {
   z-index: 210;
   background: rgba(0,0,0,0.45);
   padding: 40px 20px;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -850,12 +847,22 @@ body {
   font-weight: 600;
 }
 
+.cabinet-pets-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
 .cabinet-pets-switcher,
 .pet-choice-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 14px;
+}
+
+.cabinet-pets-row .cabinet-pets-switcher {
+  margin-bottom: 0;
+  flex: 1;
 }
 
 .cabinet-pet-chip,
@@ -887,23 +894,56 @@ body {
 }
 
 .cabinet-secondary-btn {
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--gray-light);
-  background: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--gray-light);
   color: var(--text);
   font-family: var(--font);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .cabinet-secondary-btn:hover {
-  background: var(--pastel);
+  background: #dfe6ef;
+  transform: scale(1.02);
 }
 
 .cabinet-passport-right {
   padding-left: 8px;
+}
+
+.cabinet-view-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.cabinet-view-tab {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.cabinet-view-tab.active {
+  color: var(--sky-dark);
+  border-bottom-color: var(--sky-dark);
+}
+
+.cabinet-view-panel {
+  display: none;
+}
+
+.cabinet-view-panel.active {
+  display: block;
 }
 
 .cabinet-history-title {
@@ -958,6 +998,7 @@ body {
 @media (max-width: 768px) {
   .cabinet-section {
     padding: 8px 10px 14px;
+    align-items: flex-start;
   }
   .cabinet-passport {
     grid-template-columns: 1fr;
@@ -987,20 +1028,29 @@ body {
   }
 }
 
-/* Кнопка выхода из аккаунта в правом нижнем углу паспорта */
-.cabinet-actions-row {
-  position: absolute;
-  right: 32px;
-  bottom: 66px;
-  display: flex;
+.cabinet-add-pet-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-light);
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-bottom: 14px;
 }
-.cabinet-actions-row--logout {
-  bottom: 14px;
+
+.cabinet-add-pet-btn:hover {
+  background: var(--pastel);
 }
 
 .cabinet-logout-btn {
+  margin-top: 12px;
   padding: 10px 24px;
   border-radius: 999px;
   border: 1px solid var(--gray-light);
@@ -1029,32 +1079,11 @@ body {
 .main-content.hidden { display: none; }
 
 @media (max-width: 768px) {
-  .cabinet-actions-row {
-    position: static;
-    margin-top: 8px;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-  }
-  .cabinet-actions-row--logout {
-    margin-top: 6px;
+  .cabinet-pets-row {
+    margin-bottom: 10px;
   }
 }
 
-.calendar-modal-box {
-  max-width: 760px;
-  position: relative;
-  margin: 10px auto;
-  max-height: calc(100dvh - 20px);
-  overflow-y: auto;
-}
-.calendar-close-btn {
-  top: 12px;
-  right: 12px;
-}
-.calendar-title {
-  text-align: center;
-  margin-bottom: 10px;
-}
 .calendar-desc {
   font-size: 14px;
   color: var(--text-muted);
@@ -1076,14 +1105,19 @@ body {
 .calendar-notify-chip {
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid var(--gray-light);
-  background: #fff;
+  border: none;
+  background: #eef2f7;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
+.calendar-notify-chip:hover { transform: scale(1.03); }
 .calendar-notify-chip.active {
-  background: #38bdf8;
+  background: var(--sky-dark);
   color: #fff;
-  border-color: #0ea5e9;
 }
 .calendar-type-tabs {
   display: flex;
@@ -1092,17 +1126,21 @@ body {
 }
 .calendar-type-tab {
   flex: 1;
-  border-radius: 12px;
+  border-radius: 999px;
   padding: 10px 12px;
-  border: 1px solid var(--gray-light);
-  background: #fff;
-  font-weight: 700;
+  border: none;
+  background: #eef2f7;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
+.calendar-type-tab:hover { transform: scale(1.03); }
 .calendar-type-tab.active {
-  background: #38bdf8;
+  background: var(--sky-dark);
   color: #fff;
-  border-color: #0ea5e9;
 }
 .calendar-picker-row {
   display: flex;
@@ -1177,19 +1215,29 @@ body {
 }
 .calendar-form-actions button {
   padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--gray-light);
-  background: #fff;
+  border-radius: 8px;
+  border: none;
+  background: var(--gray-light);
+  color: var(--text);
+  font-family: var(--font);
   cursor: pointer;
   transition: transform 0.18s ease;
 }
 .calendar-form-actions button.primary-action {
-  background: #38bdf8;
+  background: var(--sky-dark);
   color: #fff;
-  border-color: #0ea5e9;
+}
+.calendar-form-actions button.danger-action {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 .calendar-form-actions button:hover {
   transform: scale(1.03);
+}
+.calendar-deleted-note {
+  font-weight: 700;
+  color: #16a34a;
+  padding: 6px 0;
 }
 .calendar-form-status {
   margin-top: 8px;

@@ -781,6 +781,10 @@
   const cabinetPetPhoto = document.getElementById("cabinetPetPhoto");
   const cabinetChangePetPhotoBtn = document.getElementById("cabinetChangePetPhotoBtn");
   const cabinetPetsSwitcher = document.getElementById("cabinetPetsSwitcher");
+  const cabinetHistoryPanel = document.getElementById("cabinetHistoryPanel");
+  const cabinetCalendarPanel = document.getElementById("cabinetCalendarPanel");
+  const cabinetViewHistoryBtn = document.getElementById("cabinetViewHistoryBtn");
+  const cabinetViewCalendarBtn = document.getElementById("cabinetViewCalendarBtn");
   const addPetModal = document.getElementById("addPetModal");
   const addPetForm = document.getElementById("addPetForm");
   const questionnairePetSelectorWrap = document.getElementById("questionnairePetSelectorWrap");
@@ -840,11 +844,23 @@
         renderCabinetPetTabs();
         renderCabinetPetCard();
         loadCabinetHistory();
-        if (calendarModal && calendarModal.classList.contains("open")) {
-          loadCalendarEvents();
-        }
+        if (cabinetCalendarPanel && cabinetCalendarPanel.classList.contains("active")) loadCalendarEvents();
       });
     });
+  }
+
+  function setCabinetView(view) {
+    var isCalendar = view === "calendar";
+    if (cabinetViewHistoryBtn) cabinetViewHistoryBtn.classList.toggle("active", !isCalendar);
+    if (cabinetViewCalendarBtn) cabinetViewCalendarBtn.classList.toggle("active", isCalendar);
+    if (cabinetHistoryPanel) cabinetHistoryPanel.classList.toggle("active", !isCalendar);
+    if (cabinetCalendarPanel) cabinetCalendarPanel.classList.toggle("active", isCalendar);
+    if (isCalendar) {
+      if (!selectedCabinetPetId && userPets.length) selectedCabinetPetId = userPets[0].id;
+      initCalendarUi();
+      loadCalendarEvents();
+      loadPushSettings();
+    }
   }
 
   function renderCabinetPetCard() {
@@ -919,15 +935,14 @@
         renderCabinetPetTabs();
         renderCabinetPetCard();
         loadCabinetHistory();
+        setCabinetView("history");
       })
       .catch(function () {});
   }
 
   function hideCabinet() {
     if (cabinetSection) cabinetSection.classList.remove("visible");
-    if (!calendarModal || !calendarModal.classList.contains("open")) {
-      document.body.classList.remove("body-locked");
-    }
+    document.body.classList.remove("body-locked");
   }
 
   cabinetBtn && cabinetBtn.addEventListener("click", showCabinet);
@@ -954,33 +969,13 @@
   }
 
   var cabinetAddPetBtn = document.getElementById("cabinetAddPetBtn");
-  var cabinetCalendarBtn = document.getElementById("cabinetCalendarBtn");
-  var calendarModal = document.getElementById("calendarModal");
-  var calendarCloseBtn = document.getElementById("calendarCloseBtn");
   if (cabinetAddPetBtn && addPetModal) {
     cabinetAddPetBtn.addEventListener("click", function () {
       addPetModal.classList.add("open");
     });
   }
-  if (cabinetCalendarBtn && calendarModal) {
-    cabinetCalendarBtn.addEventListener("click", function () {
-      openCalendarModal();
-    });
-  }
-  if (calendarCloseBtn && calendarModal) {
-    calendarCloseBtn.addEventListener("click", function () {
-      calendarModal.classList.remove("open");
-      document.body.classList.remove("body-locked");
-    });
-  }
-  if (calendarModal) {
-    calendarModal.addEventListener("click", function (e) {
-      if (e.target === calendarModal) {
-        calendarModal.classList.remove("open");
-        document.body.classList.remove("body-locked");
-      }
-    });
-  }
+  if (cabinetViewHistoryBtn) cabinetViewHistoryBtn.addEventListener("click", function () { setCabinetView("history"); });
+  if (cabinetViewCalendarBtn) cabinetViewCalendarBtn.addEventListener("click", function () { setCabinetView("calendar"); });
   var closeAddPetModal = document.getElementById("closeAddPetModal");
   if (closeAddPetModal && addPetModal) {
     closeAddPetModal.addEventListener("click", function () {
@@ -1108,16 +1103,6 @@
     return !!((standalone || iosStandalone) && isMobile);
   }
 
-  function openCalendarModal() {
-    if (!calendarModal) return;
-    calendarModal.classList.add("open");
-    document.body.classList.add("body-locked");
-    if (!selectedCabinetPetId && userPets.length) selectedCabinetPetId = userPets[0].id;
-    initCalendarUi();
-    loadCalendarEvents();
-    loadPushSettings();
-  }
-
   function initCalendarUi() {
     if (!calendarMonthSelect || !calendarYearSelect || !calendarWeekdays) return;
     var monthNames = [
@@ -1231,12 +1216,15 @@
     } else {
       calendarFormActions.innerHTML =
         "<button type=\"button\" class=\"primary-action\" id=\"calendarEditBtn\">Изменить</button>" +
+        "<button type=\"button\" class=\"danger-action\" id=\"calendarDeleteBtn\">Удалить</button>" +
         "<button type=\"button\" id=\"calendarCancelBtn\">Отменить</button>";
       var editBtn = document.getElementById("calendarEditBtn");
+      var deleteBtn = document.getElementById("calendarDeleteBtn");
       var cancelBtn2 = document.getElementById("calendarCancelBtn");
       editBtn && editBtn.addEventListener("click", function () {
         renderCalendarFormActionsSave();
       });
+      deleteBtn && deleteBtn.addEventListener("click", submitCalendarDelete);
       cancelBtn2 && cancelBtn2.addEventListener("click", closeCalendarForm);
     }
   }
@@ -1318,6 +1306,26 @@
         }
         if (calendarFormActions) calendarFormActions.innerHTML = "";
         if (calendarFormStatus) calendarFormStatus.textContent = "Сохранено!";
+        loadCalendarEvents();
+      })
+      .catch(function () { alert("Ошибка сети"); });
+  }
+
+  function submitCalendarDelete() {
+    if (!calendarState.selectedEventId) return;
+    fetch(API + "/calendar/events/" + encodeURIComponent(String(calendarState.selectedEventId)), {
+      method: "DELETE",
+      headers: authHeaders(),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok) {
+          alert((res && res.error) || "Не удалось удалить событие");
+          return;
+        }
+        if (calendarFormActions) calendarFormActions.innerHTML = "<span class=\"calendar-deleted-note\">Удалено!</span>";
+        if (calendarFormStatus) calendarFormStatus.textContent = "Удалено!";
+        calendarState.selectedEventId = null;
         loadCalendarEvents();
       })
       .catch(function () { alert("Ошибка сети"); });
