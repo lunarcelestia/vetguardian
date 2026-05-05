@@ -742,8 +742,10 @@ body {
   z-index: 210;
   background: rgba(0,0,0,0.45);
   padding: 40px 20px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .cabinet-section.visible {
   display: flex;
@@ -752,7 +754,7 @@ body {
 /* Паспорт питомца в личном кабинете */
 .cabinet-passport {
   max-width: 960px;
-  margin: 40px auto;
+  margin: 16px auto 28px;
   background: #ffffff;
   border-radius: 24px;
   border: 2px solid var(--gray-light);
@@ -954,9 +956,15 @@ body {
 .cabinet-history-list .level.red { color: var(--danger-red); }
 
 @media (max-width: 768px) {
+  .cabinet-section {
+    padding: 8px 10px 14px;
+  }
   .cabinet-passport {
     grid-template-columns: 1fr;
-    padding: 24px 20px 28px;
+    padding: 16px 14px 18px;
+    margin: 0 auto;
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto;
   }
   .cabinet-passport-left {
     border-right: none;
@@ -1035,6 +1043,9 @@ body {
 .calendar-modal-box {
   max-width: 760px;
   position: relative;
+  margin: 10px auto;
+  max-height: calc(100dvh - 20px);
+  overflow-y: auto;
 }
 .calendar-close-btn {
   top: 12px;

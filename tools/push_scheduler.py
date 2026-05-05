@@ -98,6 +98,11 @@ def send_push(row):
 def main():
     parser = argparse.ArgumentParser(description="Отправка push-уведомлений календаря VetGuardian")
     parser.add_argument("--dry-run", action="store_true", help="Только показать, что было бы отправлено")
+    parser.add_argument(
+        "--test-send-now",
+        action="store_true",
+        help="Тестовый режим: отправить сразу события с notify_offset_days=1, если дата события завтра.",
+    )
     args = parser.parse_args()
 
     if not Config.VAPID_PRIVATE_KEY or not Config.VAPID_PUBLIC_KEY:
@@ -108,7 +113,41 @@ def main():
     conn.row_factory = sqlite3.Row
     try:
         due_rows = fetch_due_rows(conn)
-        for row in due_rows:
+        rows_to_process = list(due_rows)
+        if args.test_send_now:
+            tomorrow = date.today() + timedelta(days=1)
+            test_rows = conn.execute(
+                """
+                SELECT
+                    ce.id AS event_id,
+                    ce.event_date,
+                    ce.event_type,
+                    ce.note,
+                    p.name AS pet_name,
+                    us.notify_offset_days,
+                    ps.id AS subscription_id,
+                    ps.endpoint,
+                    ps.p256dh,
+                    ps.auth
+                FROM calendar_events ce
+                JOIN pets p ON p.id = ce.pet_id
+                JOIN user_notification_settings us ON us.user_id = ce.user_id
+                JOIN push_subscriptions ps ON ps.user_id = ce.user_id
+                WHERE us.enabled = 1
+                  AND us.notify_offset_days = 1
+                  AND ps.is_active = 1
+                  AND ce.event_date = ?
+                """,
+                (tomorrow.strftime("%Y-%m-%d"),),
+            ).fetchall()
+            rows_to_process.extend(test_rows)
+
+        seen = set()
+        for row in rows_to_process:
+            dedupe_key = (row["event_id"], row["subscription_id"], row["event_date"])
+            if dedupe_key in seen:
+                continue
+            seen.add(dedupe_key)
             scheduled_for = str(date.today())
             if was_sent(conn, row["event_id"], row["subscription_id"], scheduled_for):
                 continue

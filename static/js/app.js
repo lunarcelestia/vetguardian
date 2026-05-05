@@ -914,6 +914,7 @@
       })
       .then(function () {
         if (cabinetSection) cabinetSection.classList.add("visible");
+        document.body.classList.add("body-locked");
         if (userPets.length && !selectedCabinetPetId) selectedCabinetPetId = userPets[0].id;
         renderCabinetPetTabs();
         renderCabinetPetCard();
@@ -924,6 +925,9 @@
 
   function hideCabinet() {
     if (cabinetSection) cabinetSection.classList.remove("visible");
+    if (!calendarModal || !calendarModal.classList.contains("open")) {
+      document.body.classList.remove("body-locked");
+    }
   }
 
   cabinetBtn && cabinetBtn.addEventListener("click", showCabinet);
@@ -966,11 +970,15 @@
   if (calendarCloseBtn && calendarModal) {
     calendarCloseBtn.addEventListener("click", function () {
       calendarModal.classList.remove("open");
+      document.body.classList.remove("body-locked");
     });
   }
   if (calendarModal) {
     calendarModal.addEventListener("click", function (e) {
-      if (e.target === calendarModal) calendarModal.classList.remove("open");
+      if (e.target === calendarModal) {
+        calendarModal.classList.remove("open");
+        document.body.classList.remove("body-locked");
+      }
     });
   }
   var closeAddPetModal = document.getElementById("closeAddPetModal");
@@ -1103,6 +1111,7 @@
   function openCalendarModal() {
     if (!calendarModal) return;
     calendarModal.classList.add("open");
+    document.body.classList.add("body-locked");
     if (!selectedCabinetPetId && userPets.length) selectedCabinetPetId = userPets[0].id;
     initCalendarUi();
     loadCalendarEvents();
